@@ -1,32 +1,42 @@
-import { ScrollView, StyleSheet, Text, TextInput, Dimensions, Platform, View} from "react-native";
+import {ScrollView, StyleSheet, Text, TextInput, Dimensions, Platform, View, TouchableOpacity} from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {
-    useNavigation,
-} from '@react-navigation/native';
-import MapView from "react-native-maps";
+import MapView, {Callout, Marker} from "react-native-maps";
 import {useEffect, useState} from "react";
-import {requestForegroundPermissionsAsync, getCurrentPositionAsync} from "expo-location";
+import {requestForegroundPermissionsAsync, getCurrentPositionAsync, reverseGeocodeAsync} from "expo-location";
 
 
 const AddEvent = () => {
     const [location, setLocation] = useState()
+    const [address, setAddress] = useState('');
+    const [mapRef, setMapRef] = useState(null);
 
     async function requestLocationPermission() {
-        const { granted } = await requestForegroundPermissionsAsync();
+        const {granted} = await requestForegroundPermissionsAsync();
 
-            if (granted) {
-                const currentPosition = await getCurrentPositionAsync();
-                setLocation(currentPosition);
-
-                console.log("LOCALIZAÇÃO ATUAL => ", currentPosition);
-            }
+        if (granted) {
+            const currentPosition = await getCurrentPositionAsync();
+            setLocation(currentPosition);
+        }
     }
 
-    // {"coords": {"accuracy": 100, "altitude": 346.1999816894531, "altitudeAccuracy": 100, "heading": 0, "latitude": -22.3451737, "longitude": -43.683842, "speed": 0}, "mocked": false, "timestamp": 1711933238555}
+    async function fetchAddress(loc) {
+        const response = await reverseGeocodeAsync({latitude: loc.latitude, longitude: loc.longitude});
+        if (response && response.length > 0) {
+            const firstResult = response[0];
+            const formattedAddress = firstResult.formattedAddress;
+            setAddress(formattedAddress);
+            console.log(formattedAddress);
+        } else {
+            setAddress('Endereço não encontrado.');
+            console.log('Endereço não encontrado.');
+        }
+    }
 
-    useEffect(() =>{
-         requestLocationPermission()
+    useEffect(() => {
+        requestLocationPermission()
     }, []);
+
+    const [showMap, setShowMap] = useState(false);
 
     const [date, setDate] = useState(new Date());
     const [dateFormatted, setDateFormatted] = useState('');
@@ -92,12 +102,28 @@ const AddEvent = () => {
         return `${hours}:${minutes}`;
     }
 
+    async function moveToCurrentLocation() {
+        const {granted} = await requestForegroundPermissionsAsync();
+        if (granted) {
+            const currentPosition = await getCurrentPositionAsync({});
+            setLocation(currentPosition);
+            const newRegion = {
+                latitude: currentPosition.coords.latitude,
+                longitude: currentPosition.coords.longitude,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
+            };
+            mapRef.animateToRegion(newRegion, 1000); // Anima o mapa para a nova região
+        }
+    }
+
 
     const size = Dimensions.get('window').width;
 
     const style = StyleSheet.create({
         container: {
-          width: '100%'
+            flex: 1,
+            width: '100%'
         },
         divInput: {
             display: 'flex',
@@ -105,6 +131,19 @@ const AddEvent = () => {
             width: size * 0.85,
             marginVertical: size * 0.04,
             height: size * 0.09,
+            lineHeight: size * 0.09,
+            textAlign: 'center',
+            borderRadius: 6,
+            borderColor: 'black',
+            borderWidth: 0.5,
+        },
+        locationInput: {
+            display: 'flex',
+            backgroundColor: "#D9D9D9",
+            width: size * 0.85,
+            padding: size * 0.01,
+            marginVertical: size * 0.04,
+            height: size * 0.18,
             lineHeight: size * 0.09,
             textAlign: 'center',
             borderRadius: 6,
@@ -152,22 +191,137 @@ const AddEvent = () => {
         }
     })
 
-    const navigation = useNavigation();
     return (
         <View style={style.container}>
-        {
-            location &&
-            <MapView
-                style={style.map}
-                initialRegion={{
-                    latitude: location.coords.latitude,
-                    longitude: location.coords.longitude,
-                    latitudeDelta: 0.005,
-                    longitudeDelta: 0.005
-                }}
 
-        />
-        }
+            {!showMap &&
+                <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
+
+                    <Text style={style.textDiv}>Título</Text>
+                    <TextInput style={style.divInput}></TextInput>
+
+                    <Text style={style.textDiv}>Data</Text>
+                    <Text style={style.divInput} onPress={showDatepicker}>{dateFormatted}</Text>
+                    <View style={style.containerAllHorarioInputs}>
+                        <View style={style.containerHorarioInputs}>
+                            <Text>Horário Inicio</Text>
+                            <Text style={style.horarioInputs} onPress={showStartTimepicker}>{timeStartFormatted}</Text>
+                        </View>
+                        <View style={style.containerHorarioInputs}>
+                            <Text>Horário Fim</Text>
+                            <Text style={style.horarioInputs} onPress={showEndTimepicker}>{timeEndFormatted}</Text>
+                        </View>
+
+                    </View>
+                    <Text style={style.textDiv}>Adicionar Localização</Text>
+
+                    <Text numberOfLines={2} onPress={() => setShowMap(true)}
+                          style={style.locationInput}>{address}</Text>
+
+                    <Text style={style.textDiv}>Descrição</Text>
+                    <TextInput style={style.descricaoInput}></TextInput>
+
+                    <Text style={style.textDiv}>Adicionar Imagens +</Text>
+
+
+                    {showDate && (
+                        <DateTimePicker
+                            testID="dateTimePicker"
+                            value={date}
+                            mode="date"
+                            is24Hour={true}
+                            display="default"
+                            onChange={onChangeDate}
+                        />
+                    )}
+
+                    {showTimeStart && (
+                        <DateTimePicker
+                            testID="dateTimePicker"
+                            value={timeStart}
+                            mode="time"
+                            is24Hour={true}
+                            display="default"
+                            onChange={onChangeStartTime}
+                        />
+                    )}
+
+                    {showTimeEnd && (
+                        <DateTimePicker
+                            testID="dateTimePicker"
+                            value={timeEnd}
+                            mode="time"
+                            is24Hour={true}
+                            display="default"
+                            onChange={onChangeEndTime}
+                        />
+                    )}
+                </ScrollView>
+            }
+
+            {
+                (location && showMap) &&
+                <MapView
+                    showsTraffic={true}
+                    showsUserLocation={true}
+                    userLocationAnnotationTitle={address}
+                    ref={(map) => setMapRef(map)}
+                    style={style.map}
+                    toolbarEnabled={false}
+                    initialRegion={{
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude,
+                        latitudeDelta: 0.005,
+                        longitudeDelta: 0.005
+                    }}
+                    onPress={(e) => {
+                        const loc = {
+                            coords: {
+                                latitude: e.nativeEvent.coordinate.latitude,
+                                longitude: e.nativeEvent.coordinate.longitude,
+                            }
+                        };
+                        setLocation(loc);
+                        fetchAddress(loc.coords);
+                    }}
+                >
+                    <Marker
+                        coordinate={{
+                            latitude: location.coords.latitude,
+                            longitude: location.coords.longitude,
+                        }}
+                        onCalloutPress={() => console.log("Callout pressionado!")}
+                    >
+                        <Callout>
+                            <Text>Localização:</Text>
+                            <Text>{address || ''}</Text>
+                        </Callout>
+                    </Marker>
+                </MapView>
+            }
+            {
+                (location && showMap) &&
+                <View style={{
+                    position: 'absolute',
+                    display: 'flex',
+                    gap: size * 0.02,
+                    bottom: size * 0.05,
+                    right: size * 0.05,
+                    width: size * 0.45
+                }}>
+                    <Text style={{fontSize: size * 0.03}}>{address}</Text>
+
+                    <TouchableOpacity style={{
+                        backgroundColor: '#00ff00',
+                        padding: size * 0.02,
+                        borderRadius: 6
+                    }}
+                    onPress={() => setShowMap(false)}
+                    >
+                        <Text style={{textAlign: 'center'}}>CONFIRMAR</Text>
+                    </TouchableOpacity>
+                </View>
+            }
         </View>
     );
 }
