@@ -1,0 +1,11 @@
+[
+    {
+        "id": 1,
+        "title": "Festa Pijama",
+        "description": "Descrição da festa do Pijama",
+        "date": "31/03/2024",
+        "time_start": "20:00",
+        "time_end": "21:00",
+        "location": "Casa do Bernardo"
+    }
+]
