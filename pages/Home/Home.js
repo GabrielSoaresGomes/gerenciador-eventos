@@ -1,4 +1,4 @@
-import {Button, ScrollView, Text} from "react-native";
+import {ScrollView} from "react-native";
 import {
     useNavigation, useFocusEffect
 } from '@react-navigation/native';
@@ -7,7 +7,6 @@ import Card from "../../components/Card/Card";
 import AddButton from "../../components/AddButton/AddButton";
 
 import eventsMock from '../../events-mock.json';
-import card from "../../components/Card/Card";
 
 const Home = () => {
     const [events, setEvents] = useState(eventsMock);
@@ -16,7 +15,6 @@ const Home = () => {
     useFocusEffect(() => {
         const eventsMock = require('../../events-mock.json');
         setEvents(eventsMock);
-        console.log(events);
     });
 
     return (

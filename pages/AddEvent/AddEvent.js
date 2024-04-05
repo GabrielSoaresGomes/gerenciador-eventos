@@ -1,4 +1,14 @@
-import {ScrollView, StyleSheet, Text, TextInput, Dimensions, Platform, View, TouchableOpacity} from "react-native";
+import {
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    Dimensions,
+    Platform,
+    View,
+    TouchableOpacity,
+    Button
+} from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, {Callout, Marker} from "react-native-maps";
 import {useEffect, useState} from "react";
@@ -129,7 +139,7 @@ const AddEvent = () => {
             display: 'flex',
             backgroundColor: "#D9D9D9",
             width: size * 0.85,
-            marginVertical: size * 0.04,
+            marginVertical: size * 0.03,
             height: size * 0.09,
             lineHeight: size * 0.09,
             textAlign: 'center',
@@ -179,15 +189,30 @@ const AddEvent = () => {
             backgroundColor: "#D9D9D9",
             borderColor: 'black',
             borderWidth: 0.5,
-            borderRadius: 6
+            borderRadius: 6,
+            marginTop: size * 0.05,
         },
         textDiv: {
-            marginTop: size * 0.1,
+            marginTop: size * 0.05,
         },
         map: {
             flex: 1,
             width: '100%',
             height: '100%'
+        },
+        saveButton: {
+            width: size * 0.5,
+            height: size * 0.1,
+            backgroundColor: 'rgba(34,231,34,0.33)',
+            color: 'black',
+            fontSize: size * 0.05,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            textAlignVertical: 'center',
+            borderColor: 'black',
+            borderWidth: 0.5,
+            borderRadius: 6,
+            marginTop: size * 0.1,
         }
     })
 
@@ -222,6 +247,8 @@ const AddEvent = () => {
                     <TextInput style={style.descricaoInput}></TextInput>
 
                     <Text style={style.textDiv}>Adicionar Imagens +</Text>
+
+                    <TouchableOpacity><Text style={style.saveButton}>Salvar</Text></TouchableOpacity>
 
 
                     {showDate && (
