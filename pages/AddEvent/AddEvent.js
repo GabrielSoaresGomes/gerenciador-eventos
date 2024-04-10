@@ -1,21 +1,35 @@
+import React, {useRef, useState, useEffect} from 'react';
 import {
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
-    Dimensions,
-    Platform,
     View,
     TouchableOpacity,
-    Button
-} from "react-native";
+    Button,
+    Dimensions,
+    Platform
+} from 'react-native';
+import {Camera, CameraType} from 'expo-camera';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import MapView, {Callout, Marker} from "react-native-maps";
-import {useEffect, useState} from "react";
-import {requestForegroundPermissionsAsync, getCurrentPositionAsync, reverseGeocodeAsync} from "expo-location";
-
+import MapView, {Callout, Marker} from 'react-native-maps';
+import {requestForegroundPermissionsAsync, getCurrentPositionAsync, reverseGeocodeAsync} from 'expo-location';
 
 const AddEvent = () => {
+    const [type, setType] = useState(CameraType.back);
+    const [permission, setPermission] = useState(null); // Atualizado para null como valor inicial
+    const cameraRef = useRef(null);
+    const [cameraVisible, setCameraVisible] = useState(false); // Controle de visibilidade da câmera
+    const [eventData, setEventData] = useState({
+        title: '',
+        description: '',
+        date: '',
+        timeStart: '',
+        timeEnd: '',
+        location: '',
+        imageUri: ''
+    });
+
     const [location, setLocation] = useState()
     const [address, setAddress] = useState('');
     const [mapRef, setMapRef] = useState(null);
@@ -26,6 +40,17 @@ const AddEvent = () => {
         if (granted) {
             const currentPosition = await getCurrentPositionAsync();
             setLocation(currentPosition);
+        }
+    }
+
+    async function requestCamPermission() {
+        const permission = Camera.useCameraPermissions();
+
+        if (permission) {
+            console.log('COM PERMISSÃO DE CAMÊRA');
+            await setPermission(permission);
+        } else {
+            console.log('SEM PERMISSÃO DE CAMÊRA');
         }
     }
 
@@ -43,8 +68,42 @@ const AddEvent = () => {
     }
 
     useEffect(() => {
-        requestLocationPermission()
+        (async () => {
+            const {status} = await Camera.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+                console.log('SEM PERMISSÃO DE CAMÊRA');
+            } else {
+                console.log('COM PERMISSÃO DE CAMÊRA');
+            }
+        })();
+        requestLocationPermission();
     }, []);
+
+    useEffect(() => {
+        (async () => {
+            const {status} = await Camera.requestCameraPermissionsAsync();
+            setPermission(status === 'granted');
+        })();
+        requestLocationPermission();
+    }, []);
+
+    const toggleCameraType = () => {
+        // setType((currentType) => (currentType === CameraType.back ? CameraType.front : CameraType.back));
+    };
+
+    const takePicture = async () => {
+        if (cameraRef.current) {
+            try {
+                const photo = await cameraRef.current.takePictureAsync();
+                const newEventData = eventData;
+                newEventData.imageUri = photo.imageUri;
+                setEventData(newEventData);
+                setCameraVisible(false); // Esconde a câmera após capturar a foto
+            } catch (error) {
+                console.error('Erro ao capturar a foto:', error);
+            }
+        }
+    };
 
     const [showMap, setShowMap] = useState(false);
 
@@ -77,6 +136,9 @@ const AddEvent = () => {
         setShowDate(Platform.OS === 'ios');
         setDate(currentDate);
         setDateFormatted(formatDate(currentDate));
+        const newEventData = eventData;
+        newEventData.date = formatDate(currentDate);
+        setEventData(newEventData);
     };
 
     const onChangeStartTime = (event, selectedTime) => {
@@ -84,6 +146,9 @@ const AddEvent = () => {
         setShowTimeStart(Platform.OS === 'ios');
         setTimeStart(currentTime);
         setTimeStartFormatted(formatTime(currentTime));
+        const newEventData = eventData;
+        newEventData.timeStart = formatTime(currentTime);
+        setEventData(newEventData)
     };
 
     const onChangeEndTime = (event, selectedTime) => {
@@ -91,6 +156,9 @@ const AddEvent = () => {
         setShowTimeEnd(Platform.OS === 'ios');
         setTimeEnd(currentTime);
         setTimeEndFormatted(formatTime(currentTime));
+        const newEventData = eventData;
+        newEventData.timeEnd = formatTime(currentTime);
+        setEventData(newEventData)
     };
 
     const formatDate = (date) => {
@@ -213,8 +281,63 @@ const AddEvent = () => {
             borderWidth: 0.5,
             borderRadius: 6,
             marginTop: size * 0.1,
-        }
+        },
+        camera: {
+            flex: 1,
+        },
+        buttonContainer: {
+            flex: 1,
+            flexDirection: 'row',
+            backgroundColor: 'transparent',
+            margin: 64,
+        },
+        button: {
+            flex: 1,
+            alignSelf: 'flex-end',
+            alignItems: 'center',
+        },
+        text: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: 'white',
+        },
     })
+
+    // Código para mostrar a câmera em tela cheia com botão de captura
+    if (cameraVisible) {
+        return (
+            <View style={{flex: 1}}>
+                <Camera ref={cameraRef} style={{flex: 1}} type={type}>
+                    <View style={{
+                        flex: 1,
+                        backgroundColor: 'transparent',
+                        flexDirection: 'row',
+                        justifyContent: 'space-around',
+                        margin: 20
+                    }}>
+                        <TouchableOpacity style={{alignSelf: 'flex-end'}} onPress={takePicture}>
+                            <Text style={{fontSize: 18, marginBottom: 10, color: 'white'}}>Tirar Foto</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Camera>
+            </View>
+        );
+    }
+
+    const handleUpdateTitle = (title) => {
+        const newEventData = eventData;
+        newEventData.title = title;
+        setEventData(newEventData);
+    }
+
+    const handleUpdateDescription = (description) => {
+        const newEventData = eventData;
+        newEventData.description = description;
+        setEventData(newEventData);
+        console.log(newEventData)
+    }
+
+
 
     return (
         <View style={style.container}>
@@ -223,7 +346,7 @@ const AddEvent = () => {
                 <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
 
                     <Text style={style.textDiv}>Título</Text>
-                    <TextInput style={style.divInput}></TextInput>
+                    <TextInput style={style.divInput} onChangeText={handleUpdateTitle}></TextInput>
 
                     <Text style={style.textDiv}>Data</Text>
                     <Text style={style.divInput} onPress={showDatepicker}>{dateFormatted}</Text>
@@ -244,10 +367,9 @@ const AddEvent = () => {
                           style={style.locationInput}>{address}</Text>
 
                     <Text style={style.textDiv}>Descrição</Text>
-                    <TextInput style={style.descricaoInput}></TextInput>
+                    <TextInput style={style.descricaoInput} onChangeText={handleUpdateDescription}></TextInput>
 
-                    <Text style={style.textDiv}>Adicionar Imagens +</Text>
-
+                    <Text style={style.textDiv} onPress={() => setCameraVisible(true)}>Adicionar Imagens +</Text>
                     <TouchableOpacity><Text style={style.saveButton}>Salvar</Text></TouchableOpacity>
 
 
@@ -343,7 +465,7 @@ const AddEvent = () => {
                         padding: size * 0.02,
                         borderRadius: 6
                     }}
-                    onPress={() => setShowMap(false)}
+                                      onPress={() => setShowMap(false)}
                     >
                         <Text style={{textAlign: 'center'}}>CONFIRMAR</Text>
                     </TouchableOpacity>
