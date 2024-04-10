@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useRef, useState, useEffect} from 'react';
 import {
     ScrollView,
@@ -6,7 +7,6 @@ import {
     TextInput,
     View,
     TouchableOpacity,
-    Button,
     Dimensions,
     Platform
 } from 'react-native';
@@ -14,8 +14,10 @@ import {Camera, CameraType} from 'expo-camera';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, {Callout, Marker} from 'react-native-maps';
 import {requestForegroundPermissionsAsync, getCurrentPositionAsync, reverseGeocodeAsync} from 'expo-location';
+import {useNavigation} from "@react-navigation/native";
 
 const AddEvent = () => {
+    const navigation = useNavigation();
     const [type, setType] = useState(CameraType.back);
     const [permission, setPermission] = useState(null); // Atualizado para null como valor inicial
     const cameraRef = useRef(null);
@@ -334,9 +336,26 @@ const AddEvent = () => {
         const newEventData = eventData;
         newEventData.description = description;
         setEventData(newEventData);
-        console.log(newEventData)
+
     }
 
+    const handleSaveEventData = async () => {
+    try {
+        // Recuperar eventos existentes
+        const existingEvents = JSON.parse(await AsyncStorage.getItem('events-mock') || '[]');
+
+        // Adicionar novo evento
+        const newEvents = [...existingEvents, eventData];
+
+        // Salvar de volta no AsyncStorage
+        await AsyncStorage.setItem('events-mock', JSON.stringify(newEvents));
+        console.log(eventData);
+        console.log('Evento salvo com sucesso!');
+        navigation.navigate('Home');
+    } catch (error) {
+        console.error('Erro ao salvar evento:', error);
+    }
+}
 
 
     return (
@@ -370,7 +389,7 @@ const AddEvent = () => {
                     <TextInput style={style.descricaoInput} onChangeText={handleUpdateDescription}></TextInput>
 
                     <Text style={style.textDiv} onPress={() => setCameraVisible(true)}>Adicionar Imagens +</Text>
-                    <TouchableOpacity><Text style={style.saveButton}>Salvar</Text></TouchableOpacity>
+                    <TouchableOpacity><Text style={style.saveButton} onPress={handleSaveEventData}>Salvar</Text></TouchableOpacity>
 
 
                     {showDate && (
