@@ -16,6 +16,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, {Callout, Marker} from 'react-native-maps';
 import {requestForegroundPermissionsAsync, getCurrentPositionAsync, reverseGeocodeAsync} from 'expo-location';
 import {useNavigation} from "@react-navigation/native";
+import style from "../../components/form/style";
+import TitleInput from "../../components/form/TitleInput/TitleInput";
+import DataInput from "../../components/form/DataInput/DataInput"
+import TimeInput from "../../components/form/TimeInputs/TimeInput";
+import DescriptionInput from "../../components/form/DescriptionInput/DescriptionInput";
 
 const AddEvent = () => {
     const navigation = useNavigation();
@@ -205,110 +210,6 @@ const AddEvent = () => {
 
     const size = Dimensions.get('window').width;
 
-    const style = StyleSheet.create({
-        container: {
-            flex: 1,
-            width: '100%'
-        },
-        divInput: {
-            display: 'flex',
-            backgroundColor: "#D9D9D9",
-            width: size * 0.85,
-            marginVertical: size * 0.03,
-            height: size * 0.09,
-            lineHeight: size * 0.09,
-            textAlign: 'center',
-            borderRadius: 6,
-            borderColor: 'black',
-            borderWidth: 0.5,
-        },
-        locationInput: {
-            display: 'flex',
-            backgroundColor: "#D9D9D9",
-            width: size * 0.85,
-            padding: size * 0.01,
-            marginVertical: size * 0.04,
-            height: size * 0.18,
-            lineHeight: size * 0.09,
-            textAlign: 'center',
-            borderRadius: 6,
-            borderColor: 'black',
-            borderWidth: 0.5,
-        },
-        containerAllHorarioInputs: {
-            display: 'flex',
-            flexDirection: 'row',
-            gap: size * 0.15,
-
-        },
-        containerHorarioInputs: {
-            display: 'flex',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            alignItems: 'center'
-        },
-        horarioInputs: {
-            display: 'flex',
-            backgroundColor: "#D9D9D9",
-            width: size * 0.3,
-            height: size * 0.09,
-            textAlign: 'center',
-            lineHeight: size * 0.09,
-            fontSize: size * 0.05,
-            borderRadius: 6,
-            borderWidth: 0.5,
-        },
-        descricaoInput: {
-            width: size * 0.85,
-            height: size * 0.7,
-            backgroundColor: "#D9D9D9",
-            borderColor: 'black',
-            borderWidth: 0.5,
-            borderRadius: 6,
-            marginTop: size * 0.05,
-        },
-        textDiv: {
-            marginTop: size * 0.05,
-        },
-        map: {
-            flex: 1,
-            width: '100%',
-            height: '100%'
-        },
-        saveButton: {
-            width: size * 0.5,
-            height: size * 0.1,
-            backgroundColor: 'rgba(34,231,34,0.33)',
-            color: 'black',
-            fontSize: size * 0.05,
-            fontWeight: 'bold',
-            textAlign: 'center',
-            textAlignVertical: 'center',
-            borderColor: 'black',
-            borderWidth: 0.5,
-            borderRadius: 6,
-            marginTop: size * 0.1,
-        },
-        camera: {
-            flex: 1,
-        },
-        buttonContainer: {
-            flex: 1,
-            flexDirection: 'row',
-            backgroundColor: 'transparent',
-            margin: 64,
-        },
-        button: {
-            flex: 1,
-            alignSelf: 'flex-end',
-            alignItems: 'center',
-        },
-        text: {
-            fontSize: 24,
-            fontWeight: 'bold',
-            color: 'white',
-        },
-    })
 
     // Código para mostrar a câmera em tela cheia com botão de captura
     if (cameraVisible) {
@@ -371,29 +272,21 @@ const AddEvent = () => {
             {!showMap &&
                 <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
 
-                    <Text style={style.textDiv}>Título</Text>
-                    <TextInput value={title} style={style.divInput} onChangeText={handleUpdateTitle}></TextInput>
+                    <TitleInput title={title} handleUpdateTitle={handleUpdateTitle}/>
 
-                    <Text style={style.textDiv}>Data</Text>
-                    <Text style={style.divInput} onPress={showDatepicker}>{dateFormatted}</Text>
+                    <DataInput dateFormatted={dateFormatted} showDatepicker={showDatepicker}/>
+
                     <View style={style.containerAllHorarioInputs}>
-                        <View style={style.containerHorarioInputs}>
-                            <Text>Horário Inicio</Text>
-                            <Text style={style.horarioInputs} onPress={showStartTimepicker}>{timeStartFormatted}</Text>
-                        </View>
-                        <View style={style.containerHorarioInputs}>
-                            <Text>Horário Fim</Text>
-                            <Text style={style.horarioInputs} onPress={showEndTimepicker}>{timeEndFormatted}</Text>
-                        </View>
-
+                        <TimeInput timeFormatted={timeStartFormatted} showPicker={showStartTimepicker} textLabel={"Horário Início"} />
+                        <TimeInput timeFormatted={timeEndFormatted} showPicker={showEndTimepicker} textLabel={"Horário Fim"} />
                     </View>
+
                     <Text style={style.textDiv}>Adicionar Localização</Text>
 
                     <Text numberOfLines={2} onPress={() => setShowMap(true)}
                           style={style.locationInput}>{address}</Text>
 
-                    <Text style={style.textDiv}>Descrição</Text>
-                    <TextInput value={description} style={style.descricaoInput} onChangeText={handleUpdateDescription}></TextInput>
+                    <DescriptionInput description={description} handleUpdateDescription={handleUpdateDescription} />
 
                     <Text style={style.textDiv} onPress={() => setCameraVisible(true)}>{imgUri? "Alterar Imagem": "Adicionar Imagem +"}</Text>
                     { imgUri &&
