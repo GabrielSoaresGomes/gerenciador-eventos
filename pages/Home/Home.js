@@ -1,17 +1,30 @@
-import {ScrollView} from "react-native";
+import {BackHandler, ScrollView} from "react-native";
 import {
     useNavigation, useFocusEffect
 } from '@react-navigation/native';
 import {useCallback, useEffect, useState} from "react";
 import Card from "../../components/Card/Card";
 import AddButton from "../../components/AddButton/AddButton";
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Home = () => {
+
     const [events, setEvents] = useState([]);
     const navigation = useNavigation();
 
+
+    useEffect(() => {
+        const backAction = () => {
+            return true;
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction
+        );
+
+        return () => backHandler.remove();
+    }, []);
 
 useFocusEffect(
     useCallback(() => {

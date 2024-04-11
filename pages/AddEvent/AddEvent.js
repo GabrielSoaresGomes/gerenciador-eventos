@@ -8,7 +8,8 @@ import {
     View,
     TouchableOpacity,
     Dimensions,
-    Platform
+    Platform,
+    Image,
 } from 'react-native';
 import {Camera, CameraType} from 'expo-camera';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -19,9 +20,15 @@ import {useNavigation} from "@react-navigation/native";
 const AddEvent = () => {
     const navigation = useNavigation();
     const [type, setType] = useState(CameraType.back);
-    const [permission, setPermission] = useState(null); // Atualizado para null como valor inicial
+    const [permission, setPermission] = useState(null);
     const cameraRef = useRef(null);
-    const [cameraVisible, setCameraVisible] = useState(false); // Controle de visibilidade da câmera
+    const [cameraVisible, setCameraVisible] = useState(false);
+
+    //Form values
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [imgUri, setImgUri] = useState('');
+
     const [eventData, setEventData] = useState({
         title: '',
         description: '',
@@ -33,7 +40,7 @@ const AddEvent = () => {
     });
 
     const [location, setLocation] = useState()
-    const [address, setAddress] = useState('');
+    const [address, setAddress] = useState('não escolhido');
     const [mapRef, setMapRef] = useState(null);
 
     async function requestLocationPermission() {
@@ -49,10 +56,7 @@ const AddEvent = () => {
         const permission = Camera.useCameraPermissions();
 
         if (permission) {
-            console.log('COM PERMISSÃO DE CAMÊRA');
             await setPermission(permission);
-        } else {
-            console.log('SEM PERMISSÃO DE CAMÊRA');
         }
     }
 
@@ -60,23 +64,23 @@ const AddEvent = () => {
         const response = await reverseGeocodeAsync({latitude: loc.latitude, longitude: loc.longitude});
         if (response && response.length > 0) {
             const firstResult = response[0];
-            const formattedAddress = firstResult.formattedAddress;
+            let formattedAddress = firstResult.formattedAddress;
+            if (!formattedAddress || formattedAddress === ""){
+                formattedAddress = location
+            }
             setAddress(formattedAddress);
-            console.log(formattedAddress);
+
+            const newEventData = eventData;
+            newEventData.location = formattedAddress;
+            setEventData(newEventData);
         } else {
             setAddress('Endereço não encontrado.');
-            console.log('Endereço não encontrado.');
         }
     }
 
     useEffect(() => {
         (async () => {
             const {status} = await Camera.requestCameraPermissionsAsync();
-            if (status !== 'granted') {
-                console.log('SEM PERMISSÃO DE CAMÊRA');
-            } else {
-                console.log('COM PERMISSÃO DE CAMÊRA');
-            }
         })();
         requestLocationPermission();
     }, []);
@@ -98,9 +102,10 @@ const AddEvent = () => {
             try {
                 const photo = await cameraRef.current.takePictureAsync();
                 const newEventData = eventData;
-                newEventData.imageUri = photo.imageUri;
+                newEventData.imageUri = photo.uri;
                 setEventData(newEventData);
                 setCameraVisible(false); // Esconde a câmera após capturar a foto
+                setImgUri(photo.uri);
             } catch (error) {
                 console.error('Erro ao capturar a foto:', error);
             }
@@ -326,15 +331,18 @@ const AddEvent = () => {
         );
     }
 
+
     const handleUpdateTitle = (title) => {
         const newEventData = eventData;
         newEventData.title = title;
+        setTitle(title)
         setEventData(newEventData);
     }
 
     const handleUpdateDescription = (description) => {
         const newEventData = eventData;
         newEventData.description = description;
+        setDescription(description)
         setEventData(newEventData);
 
     }
@@ -349,7 +357,6 @@ const AddEvent = () => {
 
         // Salvar de volta no AsyncStorage
         await AsyncStorage.setItem('events-mock', JSON.stringify(newEvents));
-        console.log(eventData);
         console.log('Evento salvo com sucesso!');
         navigation.navigate('Home');
     } catch (error) {
@@ -365,7 +372,7 @@ const AddEvent = () => {
                 <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
 
                     <Text style={style.textDiv}>Título</Text>
-                    <TextInput style={style.divInput} onChangeText={handleUpdateTitle}></TextInput>
+                    <TextInput value={title} style={style.divInput} onChangeText={handleUpdateTitle}></TextInput>
 
                     <Text style={style.textDiv}>Data</Text>
                     <Text style={style.divInput} onPress={showDatepicker}>{dateFormatted}</Text>
@@ -386,9 +393,12 @@ const AddEvent = () => {
                           style={style.locationInput}>{address}</Text>
 
                     <Text style={style.textDiv}>Descrição</Text>
-                    <TextInput style={style.descricaoInput} onChangeText={handleUpdateDescription}></TextInput>
+                    <TextInput value={description} style={style.descricaoInput} onChangeText={handleUpdateDescription}></TextInput>
 
-                    <Text style={style.textDiv} onPress={() => setCameraVisible(true)}>Adicionar Imagens +</Text>
+                    <Text style={style.textDiv} onPress={() => setCameraVisible(true)}>{imgUri? "Alterar Imagem": "Adicionar Imagem +"}</Text>
+                    { imgUri &&
+                    <Image style={{width: size * 0.5, height: size * 0.9}} src={imgUri}></Image>
+                    }
                     <TouchableOpacity><Text style={style.saveButton} onPress={handleSaveEventData}>Salvar</Text></TouchableOpacity>
 
 
