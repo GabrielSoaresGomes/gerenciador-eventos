@@ -1,5 +1,5 @@
 import {Text, TextInput, View} from "react-native";
-import style from "../style";
+import {style} from "../style";
 
 const TitleInput = ({title, handleUpdateTitle}) => {
     return(

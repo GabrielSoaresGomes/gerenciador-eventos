@@ -1,6 +1,6 @@
 import {Text, View} from "react-native";
 import React from "react";
-import style from "../style";
+import {style} from "../style";
 
 const TimeInput = ({textLabel, showPicker, timeFormatted}) => {
     return (

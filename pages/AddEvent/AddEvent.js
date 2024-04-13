@@ -16,15 +16,16 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, {Callout, Marker} from 'react-native-maps';
 import {requestForegroundPermissionsAsync, getCurrentPositionAsync, reverseGeocodeAsync} from 'expo-location';
 import {useNavigation} from "@react-navigation/native";
-import style from "../../components/form/style";
+import {style, size} from "../../components/form/style";
 import TitleInput from "../../components/form/TitleInput/TitleInput";
 import DataInput from "../../components/form/DataInput/DataInput"
 import TimeInput from "../../components/form/TimeInputs/TimeInput";
 import DescriptionInput from "../../components/form/DescriptionInput/DescriptionInput";
+import CameraScreen from "../../components/form/CameraScreen/CameraScreen";
+import CameraInput from "../../components/form/CameraInput/CameraInput";
 
 const AddEvent = () => {
     const navigation = useNavigation();
-    const [type, setType] = useState(CameraType.back);
     const [permission, setPermission] = useState(null);
     const cameraRef = useRef(null);
     const [cameraVisible, setCameraVisible] = useState(false);
@@ -203,42 +204,15 @@ const AddEvent = () => {
                 latitudeDelta: 0.005,
                 longitudeDelta: 0.005,
             };
-            mapRef.animateToRegion(newRegion, 1000); // Anima o mapa para a nova região
+            mapRef.animateToRegion(newRegion, 1000);
         }
     }
 
-
-    const size = Dimensions.get('window').width;
-
-
-    // Código para mostrar a câmera em tela cheia com botão de captura
     if (cameraVisible) {
         return (
-            <View style={{flex: 1}}>
-                <Camera ref={cameraRef} style={{flex: 1}} type={type}>
-                    <View style={{
-                        flex: 1,
-                        backgroundColor: 'transparent',
-                        flexDirection: 'row',
-                        justifyContent: 'space-around',
-                        margin: 20
-                    }}>
-                        <View style={style.containerCamera}>
-                            <TouchableOpacity onPress={() => setCameraVisible(false)}>
-                                <Text style={{fontSize: 18, marginBottom: 10, color: 'white'}}>Voltar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity  onPress={takePicture}>
-                                <Text style={{fontSize: 18, marginBottom: 10, color: 'white'}}>Tirar Foto</Text>
-                            </TouchableOpacity>
-
-                        </View>
-
-                    </View>
-                </Camera>
-            </View>
+            <CameraScreen cameraRef={cameraRef} setCameraVisible={setCameraVisible} setImgUri={setImgUri}/>
         );
     }
-
 
     const handleUpdateTitle = (title) => {
         const newEventData = eventData;
@@ -272,7 +246,6 @@ const AddEvent = () => {
     }
 }
 
-
     return (
         <View style={style.container}>
 
@@ -295,10 +268,8 @@ const AddEvent = () => {
 
                     <DescriptionInput description={description} handleUpdateDescription={handleUpdateDescription} />
 
-                    <Text style={style.textDiv} onPress={() => setCameraVisible(true)}>{imgUri? "Alterar Imagem": "Adicionar Imagem +"}</Text>
-                    { imgUri &&
-                    <Image style={{width: size * 0.5, height: size * 0.9}} src={imgUri}></Image>
-                    }
+                    <CameraInput setCameraVisible={setCameraVisible} cameraRef={cameraRef} handleSaveEventData={handleSaveEventData} imgUri={imgUri} setImgUri={setImgUri} />
+
                     <TouchableOpacity><Text style={style.saveButton} onPress={handleSaveEventData}>Salvar</Text></TouchableOpacity>
 
 

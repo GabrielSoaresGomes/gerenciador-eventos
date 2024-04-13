@@ -114,6 +114,10 @@ const style = StyleSheet.create({
         fontWeight: 'bold',
         color: 'white',
     },
+    imgPreview: {
+        width: size * 0.5,
+        height: size * 0.9
+    }
 })
 
-export default style;
+export {style, size};
