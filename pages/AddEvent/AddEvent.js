@@ -1,15 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useRef, useState, useEffect} from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-    TouchableOpacity,
-    Dimensions,
-    Platform,
-    Image,
+    ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Dimensions, Platform, Image,
 } from 'react-native';
 import {Camera, CameraType} from 'expo-camera';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -23,6 +15,7 @@ import TimeInput from "../../components/form/TimeInputs/TimeInput";
 import DescriptionInput from "../../components/form/DescriptionInput/DescriptionInput";
 import CameraScreen from "../../components/form/CameraScreen/CameraScreen";
 import CameraInput from "../../components/form/CameraInput/CameraInput";
+import MapInput from "../../components/form/MapInput/MapInput";
 
 const AddEvent = () => {
     const navigation = useNavigation();
@@ -36,13 +29,7 @@ const AddEvent = () => {
     const [imgUri, setImgUri] = useState('');
 
     const [eventData, setEventData] = useState({
-        title: '',
-        description: '',
-        date: '',
-        timeStart: '',
-        timeEnd: '',
-        location: '',
-        imageUri: ''
+        title: '', description: '', date: '', timeStart: '', timeEnd: '', location: '', imageUri: ''
     });
 
     const [location, setLocation] = useState()
@@ -63,24 +50,6 @@ const AddEvent = () => {
 
         if (permission) {
             await setPermission(permission);
-        }
-    }
-
-    async function fetchAddress(loc) {
-        const response = await reverseGeocodeAsync({latitude: loc.latitude, longitude: loc.longitude});
-        if (response && response.length > 0) {
-            const firstResult = response[0];
-            let formattedAddress = firstResult.formattedAddress;
-            if (!formattedAddress || formattedAddress === ""){
-                formattedAddress = location
-            }
-            setAddress(formattedAddress);
-
-            const newEventData = eventData;
-            newEventData.location = formattedAddress;
-            setEventData(newEventData);
-        } else {
-            setAddress('Endereço não encontrado.');
         }
     }
 
@@ -209,9 +178,7 @@ const AddEvent = () => {
     }
 
     if (cameraVisible) {
-        return (
-            <CameraScreen cameraRef={cameraRef} setCameraVisible={setCameraVisible} setImgUri={setImgUri}/>
-        );
+        return (<CameraScreen cameraRef={cameraRef} setCameraVisible={setCameraVisible} setImgUri={setImgUri}/>);
     }
 
     const handleUpdateTitle = (title) => {
@@ -230,149 +197,100 @@ const AddEvent = () => {
     }
 
     const handleSaveEventData = async () => {
-    try {
-        // Recuperar eventos existentes
-        const existingEvents = JSON.parse(await AsyncStorage.getItem('events-mock') || '[]');
+        try {
+            // Recuperar eventos existentes
+            const existingEvents = JSON.parse(await AsyncStorage.getItem('events-mock') || '[]');
 
-        // Adicionar novo evento
-        const newEvents = [...existingEvents, eventData];
+            // Adicionar novo evento
+            const newEvents = [...existingEvents, eventData];
 
-        // Salvar de volta no AsyncStorage
-        await AsyncStorage.setItem('events-mock', JSON.stringify(newEvents));
-        console.log('Evento salvo com sucesso!');
-        navigation.navigate('Home');
-    } catch (error) {
-        console.error('Erro ao salvar evento:', error);
+            // Salvar de volta no AsyncStorage
+            await AsyncStorage.setItem('events-mock', JSON.stringify(newEvents));
+            console.log('Evento salvo com sucesso!');
+            navigation.navigate('Home');
+        } catch (error) {
+            console.error('Erro ao salvar evento:', error);
+        }
     }
-}
 
-    return (
-        <View style={style.container}>
+    return (<View style={style.container}>
 
-            {!showMap &&
-                <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
+        {!showMap && <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
 
-                    <TitleInput title={title} handleUpdateTitle={handleUpdateTitle}/>
+            <TitleInput title={title} handleUpdateTitle={handleUpdateTitle}/>
 
-                    <DataInput dateFormatted={dateFormatted} showDatepicker={showDatepicker}/>
+            <DataInput dateFormatted={dateFormatted} showDatepicker={showDatepicker}/>
 
-                    <View style={style.containerAllHorarioInputs}>
-                        <TimeInput timeFormatted={timeStartFormatted} showPicker={showStartTimepicker} textLabel={"Horário Início"} />
-                        <TimeInput timeFormatted={timeEndFormatted} showPicker={showEndTimepicker} textLabel={"Horário Fim"} />
-                    </View>
+            <View style={style.containerAllHorarioInputs}>
+                <TimeInput timeFormatted={timeStartFormatted} showPicker={showStartTimepicker}
+                           textLabel={"Horário Início"}/>
+                <TimeInput timeFormatted={timeEndFormatted} showPicker={showEndTimepicker}
+                           textLabel={"Horário Fim"}/>
+            </View>
 
-                    <Text style={style.textDiv}>Adicionar Localização</Text>
+            <Text style={style.textDiv}>Adicionar Localização</Text>
 
-                    <Text numberOfLines={2} onPress={() => setShowMap(true)}
-                          style={style.locationInput}>{address}</Text>
+            <Text numberOfLines={2} onPress={() => setShowMap(true)}
+                  style={style.locationInput}>{address}</Text>
 
-                    <DescriptionInput description={description} handleUpdateDescription={handleUpdateDescription} />
+            <DescriptionInput description={description} handleUpdateDescription={handleUpdateDescription}/>
 
-                    <CameraInput setCameraVisible={setCameraVisible} cameraRef={cameraRef} handleSaveEventData={handleSaveEventData} imgUri={imgUri} setImgUri={setImgUri} />
+            <CameraInput setCameraVisible={setCameraVisible} cameraRef={cameraRef}
+                         handleSaveEventData={handleSaveEventData} imgUri={imgUri} setImgUri={setImgUri}/>
 
-                    <TouchableOpacity><Text style={style.saveButton} onPress={handleSaveEventData}>Salvar</Text></TouchableOpacity>
+            <TouchableOpacity><Text style={style.saveButton}
+                                    onPress={handleSaveEventData}>Salvar</Text></TouchableOpacity>
 
 
-                    {showDate && (
-                        <DateTimePicker
-                            testID="dateTimePicker"
-                            value={date}
-                            mode="date"
-                            is24Hour={true}
-                            display="default"
-                            onChange={onChangeDate}
-                        />
-                    )}
+            {showDate && (<DateTimePicker
+                testID="dateTimePicker"
+                value={date}
+                mode="date"
+                is24Hour={true}
+                display="default"
+                onChange={onChangeDate}
+            />)}
 
-                    {showTimeStart && (
-                        <DateTimePicker
-                            testID="dateTimePicker"
-                            value={timeStart}
-                            mode="time"
-                            is24Hour={true}
-                            display="default"
-                            onChange={onChangeStartTime}
-                        />
-                    )}
+            {showTimeStart && (<DateTimePicker
+                testID="dateTimePicker"
+                value={timeStart}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={onChangeStartTime}
+            />)}
 
-                    {showTimeEnd && (
-                        <DateTimePicker
-                            testID="dateTimePicker"
-                            value={timeEnd}
-                            mode="time"
-                            is24Hour={true}
-                            display="default"
-                            onChange={onChangeEndTime}
-                        />
-                    )}
-                </ScrollView>
-            }
+            {showTimeEnd && (<DateTimePicker
+                testID="dateTimePicker"
+                value={timeEnd}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={onChangeEndTime}
+            />)}
+        </ScrollView>}
 
-            {
-                (location && showMap) &&
-                <MapView
-                    showsTraffic={true}
-                    showsUserLocation={true}
-                    userLocationAnnotationTitle={address}
-                    ref={(map) => setMapRef(map)}
-                    style={style.map}
-                    toolbarEnabled={false}
-                    initialRegion={{
-                        latitude: location.coords.latitude,
-                        longitude: location.coords.longitude,
-                        latitudeDelta: 0.005,
-                        longitudeDelta: 0.005
-                    }}
-                    onPress={(e) => {
-                        const loc = {
-                            coords: {
-                                latitude: e.nativeEvent.coordinate.latitude,
-                                longitude: e.nativeEvent.coordinate.longitude,
-                            }
-                        };
-                        setLocation(loc);
-                        fetchAddress(loc.coords);
-                    }}
-                >
-                    <Marker
-                        coordinate={{
-                            latitude: location.coords.latitude,
-                            longitude: location.coords.longitude,
-                        }}
-                        onCalloutPress={() => console.log("Callout pressionado!")}
-                    >
-                        <Callout>
-                            <Text>Localização:</Text>
-                            <Text>{address || ''}</Text>
-                        </Callout>
-                    </Marker>
-                </MapView>
-            }
-            {
-                (location && showMap) &&
-                <View style={{
-                    position: 'absolute',
-                    display: 'flex',
-                    gap: size * 0.02,
-                    bottom: size * 0.05,
-                    right: size * 0.05,
-                    width: size * 0.45
-                }}>
-                    <Text style={{fontSize: size * 0.03}}>{address}</Text>
+        <MapInput address={address} location={location} setAddress={setAddress} setLocation={setLocation}
+                  showMap={showMap} setMapRef={setMapRef}/>
+        {(location && showMap) && <View style={{
+            position: 'absolute',
+            display: 'flex',
+            gap: size * 0.02,
+            bottom: size * 0.05,
+            right: size * 0.05,
+            width: size * 0.45
+        }}>
+            <Text style={{fontSize: size * 0.03}}>{address}</Text>
 
-                    <TouchableOpacity style={{
-                        backgroundColor: '#00ff00',
-                        padding: size * 0.02,
-                        borderRadius: 6
-                    }}
-                                      onPress={() => setShowMap(false)}
-                    >
-                        <Text style={{textAlign: 'center'}}>CONFIRMAR</Text>
-                    </TouchableOpacity>
-                </View>
-            }
-        </View>
-    );
+            <TouchableOpacity style={{
+                backgroundColor: '#00ff00', padding: size * 0.02, borderRadius: 6
+            }}
+                              onPress={() => setShowMap(false)}
+            >
+                <Text style={{textAlign: 'center'}}>CONFIRMAR</Text>
+            </TouchableOpacity>
+        </View>}
+    </View>);
 }
 
 export default AddEvent;
