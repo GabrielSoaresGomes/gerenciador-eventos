@@ -223,9 +223,16 @@ const AddEvent = () => {
                         justifyContent: 'space-around',
                         margin: 20
                     }}>
-                        <TouchableOpacity style={{alignSelf: 'flex-end'}} onPress={takePicture}>
-                            <Text style={{fontSize: 18, marginBottom: 10, color: 'white'}}>Tirar Foto</Text>
-                        </TouchableOpacity>
+                        <View style={style.containerCamera}>
+                            <TouchableOpacity onPress={() => setCameraVisible(false)}>
+                                <Text style={{fontSize: 18, marginBottom: 10, color: 'white'}}>Voltar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity  onPress={takePicture}>
+                                <Text style={{fontSize: 18, marginBottom: 10, color: 'white'}}>Tirar Foto</Text>
+                            </TouchableOpacity>
+
+                        </View>
+
                     </View>
                 </Camera>
             </View>

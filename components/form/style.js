@@ -38,6 +38,15 @@ const style = StyleSheet.create({
         gap: size * 0.15,
 
     },
+    containerCamera: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'row',
+        gap: size * 0.15,
+        alignItems: "flex-end",
+        justifyContent: "space-around"
+
+    },
     containerHorarioInputs: {
         display: 'flex',
         justifyContent: 'center',
