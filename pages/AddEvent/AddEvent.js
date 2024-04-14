@@ -1,21 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useRef, useState, useEffect} from 'react';
-import {
-    ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Dimensions, Platform, Image,
-} from 'react-native';
-import {Camera, CameraType} from 'expo-camera';
+import { randomUUID } from 'expo-crypto';
+import {ScrollView, Text, View, TouchableOpacity, Platform} from 'react-native';
+import {Camera} from 'expo-camera';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import MapView, {Callout, Marker} from 'react-native-maps';
-import {requestForegroundPermissionsAsync, getCurrentPositionAsync, reverseGeocodeAsync} from 'expo-location';
+import {requestForegroundPermissionsAsync, getCurrentPositionAsync} from 'expo-location';
 import {useNavigation} from "@react-navigation/native";
-import {style, size} from "../../components/form/style";
+import {style} from "../../components/form/style";
 import TitleInput from "../../components/form/TitleInput/TitleInput";
 import DataInput from "../../components/form/DataInput/DataInput"
 import TimeInput from "../../components/form/TimeInputs/TimeInput";
 import DescriptionInput from "../../components/form/DescriptionInput/DescriptionInput";
 import CameraScreen from "../../components/form/CameraScreen/CameraScreen";
 import CameraInput from "../../components/form/CameraInput/CameraInput";
-import MapInput from "../../components/form/MapInput/MapInput";
+import MapInput from "../../components/form/Map/MapInput/MapInput";
+import MapScreen from "../../components/form/Map/MapScreen/MapScreen";
+import MapButtons from "../../components/form/Map/MapButtons/MapButtons";
 
 const AddEvent = () => {
     const navigation = useNavigation();
@@ -28,13 +28,8 @@ const AddEvent = () => {
     const [description, setDescription] = useState('');
     const [imgUri, setImgUri] = useState('');
 
-    const [eventData, setEventData] = useState({
-        title: '', description: '', date: '', timeStart: '', timeEnd: '', location: '', imageUri: ''
-    });
-
     const [location, setLocation] = useState()
     const [address, setAddress] = useState('não escolhido');
-    const [mapRef, setMapRef] = useState(null);
 
     async function requestLocationPermission() {
         const {granted} = await requestForegroundPermissionsAsync();
@@ -45,21 +40,6 @@ const AddEvent = () => {
         }
     }
 
-    async function requestCamPermission() {
-        const permission = Camera.useCameraPermissions();
-
-        if (permission) {
-            await setPermission(permission);
-        }
-    }
-
-    useEffect(() => {
-        (async () => {
-            const {status} = await Camera.requestCameraPermissionsAsync();
-        })();
-        requestLocationPermission();
-    }, []);
-
     useEffect(() => {
         (async () => {
             const {status} = await Camera.requestCameraPermissionsAsync();
@@ -67,25 +47,6 @@ const AddEvent = () => {
         })();
         requestLocationPermission();
     }, []);
-
-    const toggleCameraType = () => {
-        // setType((currentType) => (currentType === CameraType.back ? CameraType.front : CameraType.back));
-    };
-
-    const takePicture = async () => {
-        if (cameraRef.current) {
-            try {
-                const photo = await cameraRef.current.takePictureAsync();
-                const newEventData = eventData;
-                newEventData.imageUri = photo.uri;
-                setEventData(newEventData);
-                setCameraVisible(false); // Esconde a câmera após capturar a foto
-                setImgUri(photo.uri);
-            } catch (error) {
-                console.error('Erro ao capturar a foto:', error);
-            }
-        }
-    };
 
     const [showMap, setShowMap] = useState(false);
 
@@ -118,9 +79,6 @@ const AddEvent = () => {
         setShowDate(Platform.OS === 'ios');
         setDate(currentDate);
         setDateFormatted(formatDate(currentDate));
-        const newEventData = eventData;
-        newEventData.date = formatDate(currentDate);
-        setEventData(newEventData);
     };
 
     const onChangeStartTime = (event, selectedTime) => {
@@ -128,9 +86,6 @@ const AddEvent = () => {
         setShowTimeStart(Platform.OS === 'ios');
         setTimeStart(currentTime);
         setTimeStartFormatted(formatTime(currentTime));
-        const newEventData = eventData;
-        newEventData.timeStart = formatTime(currentTime);
-        setEventData(newEventData)
     };
 
     const onChangeEndTime = (event, selectedTime) => {
@@ -138,17 +93,13 @@ const AddEvent = () => {
         setShowTimeEnd(Platform.OS === 'ios');
         setTimeEnd(currentTime);
         setTimeEndFormatted(formatTime(currentTime));
-        const newEventData = eventData;
-        newEventData.timeEnd = formatTime(currentTime);
-        setEventData(newEventData)
     };
 
     const formatDate = (date) => {
         let day = date.getDate();
-        let month = date.getMonth() + 1; // getMonth() retorna mês de 0-11
+        let month = date.getMonth() + 1;
         let year = date.getFullYear();
 
-        // Garantindo que dia e mês tenham dois dígitos
         day = day < 10 ? '0' + day : day;
         month = month < 10 ? '0' + month : month;
 
@@ -162,51 +113,58 @@ const AddEvent = () => {
         return `${hours}:${minutes}`;
     }
 
-    async function moveToCurrentLocation() {
-        const {granted} = await requestForegroundPermissionsAsync();
-        if (granted) {
-            const currentPosition = await getCurrentPositionAsync({});
-            setLocation(currentPosition);
-            const newRegion = {
-                latitude: currentPosition.coords.latitude,
-                longitude: currentPosition.coords.longitude,
-                latitudeDelta: 0.005,
-                longitudeDelta: 0.005,
-            };
-            mapRef.animateToRegion(newRegion, 1000);
-        }
-    }
-
     if (cameraVisible) {
         return (<CameraScreen cameraRef={cameraRef} setCameraVisible={setCameraVisible} setImgUri={setImgUri}/>);
     }
 
     const handleUpdateTitle = (title) => {
-        const newEventData = eventData;
-        newEventData.title = title;
-        setTitle(title)
-        setEventData(newEventData);
+        setTitle(title);
     }
 
     const handleUpdateDescription = (description) => {
-        const newEventData = eventData;
-        newEventData.description = description;
-        setDescription(description)
-        setEventData(newEventData);
-
+        setDescription(description);
     }
 
     const handleSaveEventData = async () => {
         try {
-            // Recuperar eventos existentes
+            const fields = [
+                { name: title, message: 'O campo title precisa ser preenchido!' },
+                { name: dateFormatted, message: 'O campo date precisa ser preenchido!' },
+                { name: timeStartFormatted, message: 'O campo time start precisa ser preenchido!' },
+                { name: timeEndFormatted, message: 'O campo time end precisa ser preenchido!' },
+                { name: description, message: 'O campo description precisa ser preenchido!' },
+                { name: imgUri, message: 'O campo imgUri precisa ser preenchido!' },
+                { name: address, message: 'O campo address precisa ser preenchido!' }
+            ];
+
+            let hasError = false;
+
+            fields.forEach(field => {
+                if (!field.name || field.name === '' || field.name === 'não escolhido') {
+                    console.log(field.message);
+                    hasError = true;
+                }
+            });
+
+            if (hasError) {
+                return;
+            }
+
             const existingEvents = JSON.parse(await AsyncStorage.getItem('events-mock') || '[]');
+            const id = randomUUID();
+            const newEvent = {
+                id,
+                title,
+                date: dateFormatted,
+                timeStart: timeStartFormatted,
+                timeEnd: timeEndFormatted,
+                location: address,
+                description,
+            }
+            existingEvents.push(newEvent);
 
-            // Adicionar novo evento
-            const newEvents = [...existingEvents, eventData];
-
-            // Salvar de volta no AsyncStorage
-            await AsyncStorage.setItem('events-mock', JSON.stringify(newEvents));
-            console.log('Evento salvo com sucesso!');
+            await AsyncStorage.setItem('events-mock', JSON.stringify(existingEvents));
+            console.log('Evento salvo com sucesso: ', newEvent);
             navigation.navigate('Home');
         } catch (error) {
             console.error('Erro ao salvar evento:', error);
@@ -228,10 +186,8 @@ const AddEvent = () => {
                            textLabel={"Horário Fim"}/>
             </View>
 
-            <Text style={style.textDiv}>Adicionar Localização</Text>
+            <MapInput address={address} location={location}  setShowMap={setShowMap}/>
 
-            <Text numberOfLines={2} onPress={() => setShowMap(true)}
-                  style={style.locationInput}>{address}</Text>
 
             <DescriptionInput description={description} handleUpdateDescription={handleUpdateDescription}/>
 
@@ -270,26 +226,9 @@ const AddEvent = () => {
             />)}
         </ScrollView>}
 
-        <MapInput address={address} location={location} setAddress={setAddress} setLocation={setLocation}
-                  showMap={showMap} setMapRef={setMapRef}/>
-        {(location && showMap) && <View style={{
-            position: 'absolute',
-            display: 'flex',
-            gap: size * 0.02,
-            bottom: size * 0.05,
-            right: size * 0.05,
-            width: size * 0.45
-        }}>
-            <Text style={{fontSize: size * 0.03}}>{address}</Text>
+        <MapScreen showMap={showMap} location={location} address={address} setAddress={setAddress} setLocation={setLocation} />
+        <MapButtons showMap={showMap} location={location} setShowMap={setShowMap} address={address}/>
 
-            <TouchableOpacity style={{
-                backgroundColor: '#00ff00', padding: size * 0.02, borderRadius: 6
-            }}
-                              onPress={() => setShowMap(false)}
-            >
-                <Text style={{textAlign: 'center'}}>CONFIRMAR</Text>
-            </TouchableOpacity>
-        </View>}
     </View>);
 }
 

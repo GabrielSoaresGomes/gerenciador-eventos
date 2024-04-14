@@ -117,6 +117,23 @@ const style = StyleSheet.create({
     imgPreview: {
         width: size * 0.5,
         height: size * 0.9
+    },
+    mapButtons: {
+        position: 'absolute',
+        display: 'flex',
+        gap: size * 0.02,
+        bottom: size * 0.05,
+        right: size * 0.05,
+        width: size * 0.45
+    },
+    addressPreview: {
+        fontSize: size * 0.03
+    },
+    confirmAddressButton : {
+        backgroundColor: '#00ff00', padding: size * 0.02, borderRadius: 6
+    },
+    confirmAddressButtonText: {
+        textAlign: 'center'
     }
 })
 

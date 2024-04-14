@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as LocalAuthentication from "expo-local-authentication";
-import {useEffect} from "react";
 import {Dimensions, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useNavigation} from '@react-navigation/native';
 
@@ -10,6 +9,7 @@ const Authentication = () => {
 
     const handleAuthenticate = async () => {
         try {
+            await AsyncStorage.setItem('events-mock', JSON.stringify([]));
             const result = await LocalAuthentication.authenticateAsync({
                 promptMessage: 'Autentique-se para continuar',
             });
