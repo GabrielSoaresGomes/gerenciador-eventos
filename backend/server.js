@@ -40,7 +40,7 @@ function onListening() {
         ? 'pipe ' + addr
         : 'port ' + addr.port;
     debug('Listening on ' + bind);
-    console.log(`Iniciando processo NA PORTA: ${addr.port}`);
+    console.log(`Iniciando processo na PORTA: ${addr.port}`);
 }
 
 server.listen(PORT);

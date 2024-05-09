@@ -92,6 +92,53 @@ class EventComponent {
     //     return resultValidation;
     // }
 
+    async listEvents() {
+        const resultValidation = new ResultValidation();
+        try {
+            const result = await this.repository.getAllEvents();
+            resultValidation.setResult(result);
+        } catch (error) {
+            console.error(`Falha ao listar todos eventos: `, error);
+            resultValidation.addError('LIST_ERROR', 'Falha ao listar eventos', true);
+        }
+        return resultValidation;
+    }
+
+    async getEvent(eventId) {
+        const resultValidation = new ResultValidation();
+        try {
+            const result = await this.repository.getEventById(eventId);
+            resultValidation.setResult(result);
+        } catch (error) {
+            console.error(`Falha ao listar evento pelo id ${eventId}: `, error);
+            resultValidation.addError('LIST_ERROR', 'Falha ao pegar eveto pelo id', true);
+        }
+        return resultValidation;
+    }
+
+    async removeEvent(eventId) {
+        const resultValidation = new ResultValidation();
+        try {
+            const result = await this.repository.deleteEventById(eventId);
+            resultValidation.setResult(result);
+        } catch (error) {
+            console.error(`Falha ao apagar evento pelo id ${eventId}: `, error);
+            resultValidation.addError('DELETE_ERROR', 'Falha ao apagar eveto pelo id', true);
+        }
+        return resultValidation;
+    }
+
+    async addNewEvent(eventBody) {
+        const resultValidation = new ResultValidation();
+        try {
+            const result = await this.repository.insertEvent(eventBody);
+            resultValidation.setResult(result);
+        } catch (error) {
+            console.error(`Falha ao inserir novo evento com o seguinte body: ${JSON.stringify(eventBody)}`, error);
+            resultValidation.addError('CREATE_ERROR', 'Falha ao adicionar novo evento', true);
+        }
+        return resultValidation;
+    }
 }
 
 module.exports = EventComponent;

@@ -1,1 +1,1 @@
-GET localhost:
+GET localhost:2004/api/events/

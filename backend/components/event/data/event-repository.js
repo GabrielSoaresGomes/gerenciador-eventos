@@ -68,6 +68,44 @@ class EventRepository {
     //         WHERE category_id = $1
     //     `, [categoryId]);
     // }
+
+    async getAllEvents() {
+        const connection = await this.databaseConnector.generateConnection();
+        const result = await connection.query(`
+            SELECT *
+            FROM events
+        `);
+        return result.rows;
+    }
+
+    async getEventById(eventId) {
+        const connection = await this.databaseConnector.generateConnection();
+        const result = await connection.query(`
+            SELECT *
+            FROM events
+            WHERE id = $1
+        `, [eventId]);
+        return result.rows[0];
+    }
+
+    async deleteEventById(eventId) {
+        const connection = await this.databaseConnector.generateConnection();
+        const result = await connection.query(`
+            DELETE FROM events
+            WHERE id = $1
+        `, [eventId]);
+        return true;
+    }
+
+    async insertEvent(eventBody) {
+        const connection = await this.databaseConnector.generateConnection();
+        const result = await connection.query(`
+            INSERT INTO events (title, date, time_start, time_end, address, location, description, image)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id
+        `, [eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location, eventBody.description, eventBody.image]);
+        return result.rows[0]?.id;
+    }
 }
 
 module.exports = EventRepository;
