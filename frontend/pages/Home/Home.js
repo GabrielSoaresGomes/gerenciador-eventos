@@ -46,7 +46,7 @@ useFocusEffect(
             <AddButton onPress={() => navigation.navigate('AddEvent')}/>
             {events.map((event) => {
                 return (
-                    <Card key={event.id} title={event.title} location={event.location} date={event.date} timeStart={event.timeStart}
+                    <Card key={event.title} title={event.title} location={event.location} date={event.date} timeStart={event.timeStart}
                   timeEnd={event.timeEnd}/>
                 )
             })}
