@@ -2,13 +2,12 @@ class EnvironmentValidation {
     constructor() {
         this.DEFAULT_POST = 2004;
         this.envVars = Object.freeze({
-            // DATABASE_POSTGRES_NAME: process.env.DATABASE_POSTGRES_NAME,
-            // DATABASE_POSTGRES_USER: process.env.DATABASE_POSTGRES_USER,
-            // DATABASE_POSTGRES_PASSWORD: process.env.DATABASE_POSTGRES_PASSWORD,
-            // DATABASE_POSTGRES_HOST: process.env.DATABASE_POSTGRES_HOST,
-            // DATABASE_POSTGRES_PORT: process.env.DATABASE_POSTGRES_PORT,
-            // DATABASE_POSTGRES_CONNECTION_LIMIT: process.env.DATABASE_POSTGRES_CONNECTION_LIMIT,
-            // POSTGRES_HOST: process.env.POSTGRES_HOST,
+            DATABASE_NAME: process.env.DATABASE_NAME,
+            DATABASE_USER: process.env.DATABASE_USER,
+            DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
+            DATABASE_HOST: process.env.DATABASE_HOST,
+            DATABASE_PORT: process.env.DATABASE_PORT,
+            DATABASE_CONNECTION_LIMIT: process.env.DATABASE_CONNECTION_LIMIT,
             // JWT_KEY: process.env.JWT_KEY,
             PORT: process.env.PORT || this.DEFAULT_POST
         });
