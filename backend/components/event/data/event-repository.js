@@ -93,8 +93,9 @@ class EventRepository {
         const result = await connection.query(`
             DELETE FROM events
             WHERE id = $1
+            RETURNING id
         `, [eventId]);
-        return true;
+        return result?.rows[0]?.id;
     }
 
     async insertEvent(eventBody) {

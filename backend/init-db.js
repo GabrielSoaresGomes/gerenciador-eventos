@@ -4,8 +4,9 @@ const databaseConnector = new DatabaseConnector();
 const initDB = async () => {
     const connection = await databaseConnector.generateConnection();
     await connection.query(`
+        -- DROP TABLE IF EXISTS events;
         CREATE TABLE IF NOT EXISTS events (
-            id INTEGER PRIMARY KEY NOT NULL,
+            id SERIAL NOT NULL,
             title TEXT NOT NULL,
             date TEXT NOT NULL,
             time_start TEXT NOT NULL,
@@ -13,9 +14,9 @@ const initDB = async () => {
             location TEXT NOT NULL,
             address TEXT NOT NULL,
             description TEXT NOT NULL,
-            image BLOB)
+            image BYTEA
         )
     `);
 }
 
-module.exports = initDB();
+module.exports = initDB;

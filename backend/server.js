@@ -2,6 +2,10 @@ const app = require('./app');
 const env = require('./entity/environment-validation');
 const http = require('http');
 const debug = require('debug');
+const databaseInitiator = require('./init-db');
+databaseInitiator().then(() => {
+    console.log('Banco de Dados iniciado!');
+});
 
 const PORT = env.getVar('PORT');
 app.set('port', PORT);

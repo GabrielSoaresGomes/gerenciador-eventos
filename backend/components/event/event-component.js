@@ -120,7 +120,7 @@ class EventComponent {
         const resultValidation = new ResultValidation();
         try {
             const result = await this.repository.deleteEventById(eventId);
-            resultValidation.setResult(result);
+            resultValidation.setResult({id: result});
         } catch (error) {
             console.error(`Falha ao apagar evento pelo id ${eventId}: `, error);
             resultValidation.addError('DELETE_ERROR', 'Falha ao apagar eveto pelo id', true);
@@ -132,7 +132,7 @@ class EventComponent {
         const resultValidation = new ResultValidation();
         try {
             const result = await this.repository.insertEvent(eventBody);
-            resultValidation.setResult(result);
+            resultValidation.setResult({id: result});
         } catch (error) {
             console.error(`Falha ao inserir novo evento com o seguinte body: ${JSON.stringify(eventBody)}`, error);
             resultValidation.addError('CREATE_ERROR', 'Falha ao adicionar novo evento', true);
