@@ -25,10 +25,12 @@
       "**/*"
     ],
     "ios": {
+      "proxy": "http://localhost:2004",
       "supportsTablet": true,
       "bundleIdentifier": "com.gabrielsoaresgomes.gerenciadoreventos"
     },
     "android": {
+      "proxy": "http://localhost:2004",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
@@ -36,6 +38,7 @@
       "package": "com.gabrielsoaresgomes.gerenciadoreventos"
     },
     "web": {
+      "proxy": "http://localhost:2004",
       "favicon": "./assets/icon.jpeg"
     },
     "extra": {

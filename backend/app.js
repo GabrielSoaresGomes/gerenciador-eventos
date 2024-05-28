@@ -1,7 +1,7 @@
 const express = require('express');
 require('dotenv').config();
-const logger = require('morgan');
 const cors = require('cors');
+const logger = require('morgan');
 require('./entity/environment-validation');
 
 const routes = require('./router.js');
