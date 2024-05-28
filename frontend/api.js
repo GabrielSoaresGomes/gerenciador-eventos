@@ -1,71 +1,99 @@
-const BASE_URL = 'localhost:2004/api/events';
+import axios from 'axios';
+import * as Network from 'expo-network';
+
+const BASE_URL = 'https://grumpy-monkeys-prove.loca.lt/api/events';
 
 class Api {
     constructor() {
         this.headers = {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json"
         };
+        this.isConnected = false;
+    }
+
+    async verifyConnection() {
+        try {
+            const connectionResult = await Network.getNetworkStateAsync();
+            if (connectionResult?.isConnected && connectionResult.isInternetReachable) {
+                this.isConnected = true;
+            } else {
+                this.isConnected = false;
+            }
+            console.log('Conexão verificada com sucesso! Conectado: ', this.isConnected);
+        } catch (error) {
+            console.log('Error ao verificar conexão network: ', error);
+            this.isConnected = false;
+        }
+
     }
 
     async get(url) {
         try {
-            const response = await fetch(`${BASE_URL}/${url}`, {
-                method: 'GET',
-                headers: this.headers
-            });
-            const responseJson = await response.json();
-            console.log(`Response coletado para GET ${url}: `, responseJson);
-            return responseJson;
+            await this.verifyConnection();
+            if (this.isConnected) {
+                const fullUrl = `${BASE_URL}/${url}`;
+                console.log(`Mandando requisição GET para: ${fullUrl}`);
+                const response = await axios.get(fullUrl);
+                console.log(`Response coletado para GET ${url}: `, response.data);
+                return response.data;
+            }
         } catch (error) {
-            console.log(`Erro ao realizar requisição GET para a URL: ${url}, error: `, error);
+            console.log(`Erro ao realizar requisição GET para a URL: ${BASE_URL + url}, error: `, error);
             return null;
         }
     }
 
     async post(url, body) {
         try {
-            const response = await fetch(`${BASE_URL}/${url}`, {
-                method: 'POST',
-                headers: this.headers,
-                body
-            });
-            const responseJson = await response.json();
-            console.log(`Response coletado para POST ${url}: `, responseJson);
-            return responseJson;
+            await this.verifyConnection();
+            if (this.isConnected) {
+                const fullUrl = `${BASE_URL}/${url}`;
+                const response = await axios.post(fullUrl, body, {
+                    headers: this.headers
+                });
+                console.log(`Response coletado para POST ${url}: `, response.data);
+                return response.data;
+            }
         } catch (error) {
-            console.log(`Erro ao realizar requisição POST para a URL: ${url}, e com body ${JSON.stringify(body)} error: `, error);
+            console.log(`Erro ao realizar requisição POST para a URL: ${BASE_URL + url}, e com body ${JSON.stringify(body)} error: `, error);
             return null;
         }
     }
 
     async put(url, body) {
         try {
-            const response = await fetch(`${BASE_URL}/${url}`, {
-                method: 'PUT',
-                headers: this.headers,
-                body
-            });
-            const responseJson = await response.json();
-            console.log(`Response coletado para PUT ${url}: `, responseJson);
-            return responseJson;
+            await this.verifyConnection();
+            if (this.isConnected) {
+                const fullUrl = `${BASE_URL}/${url}`;
+                const response = await axios.put(fullUrl, body, {
+                    headers: this.headers
+                });
+                console.log(`Response coletado para PUT ${url}: `, response.data);
+                return response.data;
+            }
         } catch (error) {
-            console.log(`Erro ao realizar requisição PUT para a URL: ${url}, e com body ${JSON.stringify(body)} error: `, error);
+            console.log(`Erro ao realizar requisição PUT para a URL: ${BASE_URL + url}, e com body ${JSON.stringify(body)} error: `, error);
             return null;
         }
     }
 
     async delete(url) {
         try {
-            const response = await fetch(`${BASE_URL}/${url}`, {
-                method: 'DELETE',
-                headers: this.headers
-            });
-            const responseJson = await response.json();
-            console.log(`Response coletado para DELETE ${url}: `, responseJson);
-            return responseJson;
+            await this.verifyConnection();
+            if (this.isConnected) {
+                const fullUrl = `${BASE_URL}/${url}`;
+                const response = await axios.delete(fullUrl, {
+                    headers: this.headers
+                });
+                console.log(`Response coletado para DELETE ${url}: `, response.data);
+                return response.data;
+            }
         } catch (error) {
-            console.log(`Erro ao realizar requisição DELETE para a URL: ${url}, error: `, error);
+            console.log(`Erro ao realizar requisição DELETE para a URL: ${BASE_URL + url}, error: `, error);
             return null;
         }
     }
 }
+
+const ApiInstance = new Api();
+export default ApiInstance;

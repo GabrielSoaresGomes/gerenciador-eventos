@@ -1,0 +1,3 @@
+- Para conectar com a API, deve-se rodar um ngrok ( ngrok http PORTA ) ou lt ( lt --port PORTA) na porta do back ( 2004 ).
+- Pegue o resultado e coloque na BASE_URL do api.js
+- Validar se rodando pelo docker tanto front quanto back ele funciona com localhost

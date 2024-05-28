@@ -1,5 +1,5 @@
 ### Listar todos eventos
-GET localhost:2004/api/events/
+GET localhost:2004/api/events
 
 ### Pegar evento pelo ID
 GET localhost:2004/api/events/1/
