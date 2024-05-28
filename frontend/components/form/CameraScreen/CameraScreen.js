@@ -1,11 +1,9 @@
 import {Text, TouchableOpacity, View} from "react-native";
-import {Camera, CameraType} from "expo-camera";
+import {Camera, CameraType} from "expo-camera/legacy";
 import {style} from "../style";
 import React, {useState} from "react";
 
 const CameraScreen = ({cameraRef, setCameraVisible, setImgUri}) => {
-    const [type, setType] = useState(CameraType.back);
-
     const takePicture = async () => {
         if (cameraRef.current) {
             try {
@@ -20,7 +18,7 @@ const CameraScreen = ({cameraRef, setCameraVisible, setImgUri}) => {
 
     return (
         <View style={{flex: 1}}>
-            <Camera ref={cameraRef} style={{flex: 1}} type={type}>
+            <Camera ref={cameraRef} style={{flex: 1}} type={CameraType.back}>
                 <View style={{
                     flex: 1,
                     backgroundColor: 'transparent',
