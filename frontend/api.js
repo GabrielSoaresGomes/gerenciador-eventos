@@ -1,5 +1,5 @@
 import {dbFirebase} from './firebase-config';
-import NetInfo from "@react-native-community/netinfo";
+import NetInfo from '@react-native-community/netinfo';
 
 const syncEventsWithFirebase = async () => {
     console.log('Iniciando sincronização com firebase');
@@ -10,12 +10,52 @@ const syncEventsWithFirebase = async () => {
         const events = [{id: 1}];
         for (const event of events) {
             const documentReference = dbFirebase.collection('events').doc(`${event?.id}`);
-            const document = await documentReference.get();
-            console.log(document);
+            documentReference
+                .get()
+                .then((document) => {
+                    if (document.exists) {
+                        documentReference.update({
+                            title: event?.title,
+                            date: event?.date,
+                            time_start: event?.time_start,
+                            time_end: event?.time_end,
+                            address: event?.address,
+                            location_lat: event?.location_lat,
+                            location_long: event?.location_long,
+                            description: event?.description,
+                            image: event?.image
+                        })
+                            .then(() => {
+                                console.log(`Evento de id ${event?.id} atualizado no Firebase`);
+                            })
+                            .catch((error) => {
+                                console.error(`Erro ao atualizar evento de id ${event?.id} no Firease: `, error);
+                            });
+                    } else {
+                        documentReference.set({
+                            title: event?.title,
+                            date: event?.date,
+                            time_start: event?.time_start,
+                            time_end: event?.time_end,
+                            address: event?.address,
+                            location_lat: event?.location_lat,
+                            location_long: event?.location_long,
+                            description: event?.description,
+                            image: event?.image
+                        })
+                            .then(() => {
+                                console.log(`Evento de id ${event?.id} adicionado no Firebase`);
+                            })
+                            .catch((error) => {
+                                console.error(`Erro ao adicionar evento de id ${event?.id} no Firease: `, error);
+                            });
+                    }
+                })
+            console.log('refernce: ', documentReference);
         }
     }
 }
-export { syncEventsWithFirebase };
+export {syncEventsWithFirebase};
 
 /*
 import axios from 'axios';
@@ -26,7 +66,7 @@ const BASE_URL = 'https://grumpy-monkeys-prove.loca.lt/api/events';
 class Api {
     constructor() {
         this.headers = {
-            "Content-Type": "application/json"
+            Content-Type: application/json
         };
         this.isConnected = false;
     }
