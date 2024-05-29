@@ -6,7 +6,7 @@ import {dbFirebase} from '../firebase-config';
 const initDB = async () => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     await db.execAsync(`
-        DROP TABLE IF EXISTS events;
+        -- DROP TABLE IF EXISTS events;
         CREATE TABLE IF NOT EXISTS events (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             title TEXT NOT NULL,
@@ -75,13 +75,17 @@ const removeDocumentFirebase = async (eventId) => {
 }
 
 const insertEvent = async (eventBody) => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
-    const result = await db.runAsync(`
-        INSERT INTO events (title, date, time_start, time_end, address, location_lat, location_long, description, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    try {
+        const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const result = await db.runAsync(`
+        INSERT INTO events (title, date, time_start, time_end, address, location_lat, location_long, description, image, deleted)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, false)
         RETURNING id
     `, [eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
-    return result;
+        return result;
+    } catch (error) {
+        console.error('Erro ao salvar evento: ', error);
+    }
 };
 
 const updateEvent = async (eventId, eventBody) => {

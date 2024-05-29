@@ -170,9 +170,6 @@ const AddEvent = () => {
             existingEvents.push(newEvent);
 
             await insertEvent(newEvent);
-
-            await AsyncStorage.setItem('events-mock', JSON.stringify(existingEvents));
-            console.log('Evento salvo com sucesso: ', newEvent);
             navigation.navigate('Home');
         } catch (error) {
             console.error('Erro ao salvar evento:', error);
