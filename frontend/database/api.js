@@ -156,7 +156,7 @@ const syncEventsWithFirebase = async () => {
                 if (!event?.id) {
                     console.info(`Documento de id ${document?.id} não está no banco local, inserindo!`);
                     const exists = await undeleteEventById(document.id);
-                    if (exists) {
+                    if (exists.changes >= 1) {
                         await updateEvent(document.id, document.data());
                     } else {
                         await insertEvent(document.data());
