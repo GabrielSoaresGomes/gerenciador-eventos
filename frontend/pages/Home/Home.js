@@ -5,7 +5,14 @@ import {
 import {useCallback, useEffect, useState} from "react";
 import Card from "../../components/Card/Card";
 import AddButton from "../../components/AddButton/AddButton";
-import {initDB, getAllEvents, syncEventsWithFirebase, deleteEventById, removeDocumentFirebase} from "../../database/api";
+import {
+    initDB,
+    getAllEvents,
+    syncEventsWithFirebase,
+    removeDocumentFirebase,
+    insertToQueueDelete
+} from "../../database/api";
+import NetInfo from "@react-native-community/netinfo";
 
 const Home = () => {
 
@@ -64,9 +71,13 @@ const Home = () => {
         };
     };
 
-    const handleCardDoubleTap = (event) => {
-        deleteEventById(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no sqlite`));
-        removeDocumentFirebase(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no firebase`));
+    const handleCardDoubleTap = async (event) => {
+        const connection = await NetInfo.fetch();
+        if (connection.isConnected && connection.isInternetReachable) {
+            removeDocumentFirebase(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no firebase`));
+        } else {
+            insertToQueueDelete(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no sqlite`));
+        }
         setEvents(events.filter(ev => ev?.id !== event?.id));
     };
 
@@ -77,7 +88,7 @@ const Home = () => {
                 return (
                     <TouchableOpacity
                         key={event.id}
-                        onPress={handleDoubleTap(() => handleCardDoubleTap(event))}
+                        onPress={handleDoubleTap(() => handleCardDoubleTap(event).then())}
                     >
                         <Card key={event.id} title={event.title} location={event.address} date={event.date}
                               timeStart={event.time_start}

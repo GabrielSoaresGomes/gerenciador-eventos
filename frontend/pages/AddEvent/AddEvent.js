@@ -16,7 +16,8 @@ import CameraInput from "../../components/form/CameraInput/CameraInput";
 import MapInput from "../../components/form/Map/MapInput/MapInput";
 import MapScreen from "../../components/form/Map/MapScreen/MapScreen";
 import MapButtons from "../../components/form/Map/MapButtons/MapButtons";
-import {insertEvent} from "../../database/api"
+import {insertToQueueAdd, addDocumentFirebase, syncEventsWithFirebase} from "../../database/api"
+import NetInfo from "@react-native-community/netinfo";
 
 
 const AddEvent = () => {
@@ -169,7 +170,14 @@ const AddEvent = () => {
             console.info(imgUri);
             existingEvents.push(newEvent);
 
-            await insertEvent(newEvent);
+            const connection = await NetInfo.fetch();
+            if (connection.isConnected && connection.isInternetReachable) {
+                newEvent.uuid = randomUUID();
+                await addDocumentFirebase(newEvent);
+            } else {
+                await insertToQueueAdd(newEvent);
+            }
+            await syncEventsWithFirebase();
             navigation.navigate('Home');
         } catch (error) {
             console.error('Erro ao salvar evento:', error);
