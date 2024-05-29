@@ -16,6 +16,8 @@ import CameraInput from "../../components/form/CameraInput/CameraInput";
 import MapInput from "../../components/form/Map/MapInput/MapInput";
 import MapScreen from "../../components/form/Map/MapScreen/MapScreen";
 import MapButtons from "../../components/form/Map/MapButtons/MapButtons";
+import {insertEvent} from "../../database/sqlite"
+
 
 const AddEvent = () => {
     const navigation = useNavigation();
@@ -156,12 +158,17 @@ const AddEvent = () => {
                 id,
                 title,
                 date: dateFormatted,
-                timeStart: timeStartFormatted,
-                timeEnd: timeEndFormatted,
-                location: address,
+                time_start: timeStartFormatted,
+                time_end: timeEndFormatted,
+                address,
+                location_lat: location.coords.latitude,
+                location_long: location.coords.longitude,
                 description,
             }
+            console.log(location)
             existingEvents.push(newEvent);
+
+            await insertEvent(newEvent)
 
             await AsyncStorage.setItem('events-mock', JSON.stringify(existingEvents));
             console.log('Evento salvo com sucesso: ', newEvent);

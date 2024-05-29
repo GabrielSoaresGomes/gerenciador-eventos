@@ -7,18 +7,30 @@ import Card from "../../components/Card/Card";
 import AddButton from "../../components/AddButton/AddButton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Api from '../../api';
+import { initDB, getAllEvents } from "../../database/sqlite";
 
 const Home = () => {
 
+    const [databaseStarted, setDatabaseStarted] = useState(false);
     const [events, setEvents] = useState([]);
     const navigation = useNavigation();
 
 
     useEffect(() => {
+        if (!databaseStarted) {
+            async function initializeDB() {
+                await initDB();
+                setDatabaseStarted(true)
+            }
+
+            initializeDB().then();
+        }
+    }, []);
+
+    useEffect(() => {
         const backAction = () => {
             return true;
         };
-
         const backHandler = BackHandler.addEventListener(
             'hardwareBackPress',
             backAction
@@ -27,36 +39,36 @@ const Home = () => {
         return () => backHandler.remove();
     }, []);
 
-    useEffect(() => {
-        async function fetchData() {
-            const result = await Api.get('');
-            console.log('result: ', result);
-        }
-        fetchData();
-    }, []);
+    // useEffect(() => {
+    //     async function fetchData() {
+    //         const result = await Api.get('');
+    //         console.log('result: ', result);
+    //     }
+    //     fetchData();
+    // }, []);
 
 useFocusEffect(
     useCallback(() => {
         const getEvents = async () => {
-            const eventsData = await AsyncStorage.getItem('events-mock');
+            const eventsData = await getAllEvents();
             if (eventsData !== null) {
-                setEvents(JSON.parse(eventsData));
+                setEvents(eventsData);
             } else {
                 setEvents([]);
             }
         };
 
-        getEvents();
+        getEvents().then();
     }, [])
 );
 
     return (
         <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
             <AddButton onPress={() => navigation.navigate('AddEvent')}/>
-            {events.map((event) => {
+            {events?.map((event) => {
                 return (
-                    <Card key={event.title} title={event.title} location={event.location} date={event.date} timeStart={event.timeStart}
-                  timeEnd={event.timeEnd}/>
+                    <Card key={event.id} title={event.title} location={event.address} date={event.date} timeStart={event.time_start}
+                  timeEnd={event.time_end}/>
                 )
             })}
 
