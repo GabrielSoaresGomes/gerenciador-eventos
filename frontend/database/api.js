@@ -6,7 +6,7 @@ import {dbFirebase} from '../firebase-config';
 const initDB = async () => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     await db.execAsync(`
-        -- DROP TABLE IF EXISTS events;
+        DROP TABLE IF EXISTS events;
         CREATE TABLE IF NOT EXISTS events (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             title TEXT NOT NULL,
@@ -17,7 +17,8 @@ const initDB = async () => {
             location_long TEXT NOT NULL,
             address TEXT NOT NULL,
             description TEXT NOT NULL,
-            image BYTEA
+            image BYTEA,
+            deleted BOOL DEFAULT false
         )`
     );
     console.log('Tabela criada com sucesso!!');
@@ -28,6 +29,7 @@ const getAllEvents = async () => {
     const result = await db?.getAllAsync(`
             SELECT *
             FROM events
+            WHERE deleted = false
         `);
     return result;
 }
@@ -38,6 +40,7 @@ const getEventById = async (eventId) => {
             SELECT *
             FROM events
             WHERE id = ?
+            AND deleted = false
         `, [eventId]);
     return result;
 }
@@ -45,17 +48,30 @@ const getEventById = async (eventId) => {
 const deleteEventById = async (eventId) => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     const result = await db.runAsync(`
-            DELETE FROM events
-            WHERE id = ?
-            RETURNING id
-        `, [eventId]);
+        UPDATE events
+        SET deleted = true
+        WHERE id = ?
+        AND deleted = false
+        RETURNING id
+    `, [eventId]);
+    return result;
+}
+
+const undeleteEventById = async (eventId) => {
+    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    const result = await db.runAsync(`
+        UPDATE events
+        SET deleted = false
+        WHERE id = ?
+        AND deleted = true
+        RETURNING id
+    `, [eventId]);
     return result;
 }
 
 const removeDocumentFirebase = async (eventId) => {
     const docRef = doc(dbFirebase, 'events', `${eventId}`);
     await deleteDoc(docRef);
-    console.info(`Documento de id ${eventId} apagado com sucesso!`);
 }
 
 const insertEvent = async (eventBody) => {
@@ -68,11 +84,12 @@ const insertEvent = async (eventBody) => {
     return result;
 };
 
-const updateEvent = async (eventId, eventBody)=> {
+const updateEvent = async (eventId, eventBody) => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     const result = await db.runAsync(`
         UPDATE events
         SET title = ?, date = ?, time_start = ?, time_end = ?, address = ?, location_lat = ?, location_long = ?, description = ?, image = ?
+        WHERE deleted = false
         RETURNING id
     `, [eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
     return result;
@@ -93,7 +110,6 @@ const syncEventsWithFirebase = async () => {
                     const docRef = doc(dbFirebase, "events", `${event?.id}`);
                     const document = await getDoc(docRef);
                     if (document.exists()) {
-                        console.log(event);
                         await updateDoc(docRef, {
                             title: event?.title,
                             date: event?.date,
@@ -135,7 +151,8 @@ const syncEventsWithFirebase = async () => {
                 const event = await getEventById(document.id);
                 if (!event?.id) {
                     console.info(`Documento de id ${document?.id} não está no banco local, inserindo!`);
-                    await insertEvent(document.data());
+                    await undeleteEventById(document.id);
+                    await updateEvent(document.id, document.data());
                 }
             }
         } catch (error) {
@@ -146,4 +163,12 @@ const syncEventsWithFirebase = async () => {
 }
 
 
-export {initDB, getAllEvents, getEventById, deleteEventById, insertEvent, syncEventsWithFirebase, removeDocumentFirebase};
+export {
+    initDB,
+    getAllEvents,
+    getEventById,
+    deleteEventById,
+    insertEvent,
+    syncEventsWithFirebase,
+    removeDocumentFirebase
+};

@@ -65,8 +65,8 @@ const Home = () => {
     };
 
     const handleCardDoubleTap = (event) => {
-        deleteEventById(event?.id).then();
-        removeDocumentFirebase(event?.id).then();
+        deleteEventById(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no sqlite`));
+        removeDocumentFirebase(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no firebase`));
         setEvents(events.filter(ev => ev?.id !== event?.id));
     };
 
