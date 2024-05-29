@@ -1,4 +1,4 @@
-import {getDoc, collection, doc, updateDoc, setDoc} from 'firebase/firestore';
+import {getDoc, collection, doc, updateDoc, setDoc, getDocs, deleteDoc} from 'firebase/firestore';
 import * as SQLite from 'expo-sqlite';
 import NetInfo from '@react-native-community/netinfo';
 import {dbFirebase} from '../firebase-config';
@@ -32,7 +32,7 @@ const getAllEvents = async () => {
     return result;
 }
 
-const getEventById = async(eventId) => {
+const getEventById = async (eventId) => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     const result = await db.getFirstAsync(`
             SELECT *
@@ -52,6 +52,12 @@ const deleteEventById = async (eventId) => {
     return result;
 }
 
+const removeDocumentFirebase = async (eventId) => {
+    const docRef = doc(dbFirebase, 'events', `${eventId}`);
+    await deleteDoc(docRef);
+    console.info(`Documento de id ${eventId} apagado com sucesso!`);
+}
+
 const insertEvent = async (eventBody) => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     const result = await db.runAsync(`
@@ -62,11 +68,24 @@ const insertEvent = async (eventBody) => {
     return result;
 };
 
+const updateEvent = async (eventId, eventBody)=> {
+    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    const result = await db.runAsync(`
+        UPDATE events
+        SET title = ?, date = ?, time_start = ?, time_end = ?, address = ?, location_lat = ?, location_long = ?, description = ?, image = ?
+        RETURNING id
+    `, [eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
+    return result;
+};
+
 const syncEventsWithFirebase = async () => {
-    console.log('Iniciando sincronização com firebase');
+    console.info('Iniciando sincronização com firebase');
     const connection = await NetInfo.fetch();
     if (connection.isConnected && connection.isInternetReachable) {
-        console.log('Conexão com internet OK');
+        console.info('Conexão com internet OK');
+
+        console.info('Iniciando sincronização dos dados locais para o Firebase');
+
         const events = await getAllEvents();
         if (events?.length) {
             for (const event of events) {
@@ -74,6 +93,7 @@ const syncEventsWithFirebase = async () => {
                     const docRef = doc(dbFirebase, "events", `${event?.id}`);
                     const document = await getDoc(docRef);
                     if (document.exists()) {
+                        console.log(event);
                         await updateDoc(docRef, {
                             title: event?.title,
                             date: event?.date,
@@ -85,7 +105,7 @@ const syncEventsWithFirebase = async () => {
                             description: event?.description,
                             image: event?.image
                         });
-                        console.log(`Evento de id ${event?.id} atualizado no Firebase`);
+                        console.info(`Evento de id ${event?.id} atualizado no Firebase`);
                     } else {
                         await setDoc(docRef, {
                             title: event?.title,
@@ -98,17 +118,32 @@ const syncEventsWithFirebase = async () => {
                             description: event?.description,
                             image: event?.image
                         });
-                        console.log(`Evento de id ${event?.id} adicionado no Firebase`);
+                        console.info(`Evento de id ${event?.id} adicionado no Firebase`);
                     }
                 } catch (error) {
                     console.error(`Erro ao processar evento de id ${event?.id} no Firebase: `, error);
                 }
             }
         } else {
-            console.log('Não foi encontrado nenhum registro!');
+            console.info('Não foi encontrado nenhum registro no banco local!');
         }
+
+        try {
+            console.info('Iniciando sincronização do Firebase para o banco local!');
+            const documents = await getDocs(collection(dbFirebase, 'events'));
+            for (const document of documents.docs) {
+                const event = await getEventById(document.id);
+                if (!event?.id) {
+                    console.info(`Documento de id ${document?.id} não está no banco local, inserindo!`);
+                    await insertEvent(document.data());
+                }
+            }
+        } catch (error) {
+            console.error(`Erro ao sincronizar firebase com o local`, error);
+        }
+        console.info('Finalizando sincronizações!');
     }
 }
 
 
-export {initDB, getAllEvents, getEventById, deleteEventById, insertEvent, syncEventsWithFirebase};
+export {initDB, getAllEvents, getEventById, deleteEventById, insertEvent, syncEventsWithFirebase, removeDocumentFirebase};
