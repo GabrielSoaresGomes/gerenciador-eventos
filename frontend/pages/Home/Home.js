@@ -5,8 +5,7 @@ import {
 import {useCallback, useEffect, useState} from "react";
 import Card from "../../components/Card/Card";
 import AddButton from "../../components/AddButton/AddButton";
-import { syncEventsWithFirebase } from '../../api';
-import { initDB, getAllEvents } from "../../database/sqlite";
+import { initDB, getAllEvents, syncEventsWithFirebase } from "../../database/api";
 
 const Home = () => {
 
@@ -14,14 +13,13 @@ const Home = () => {
     const [events, setEvents] = useState([]);
     const navigation = useNavigation();
 
+    async function initializeDB() {
+        await initDB();
+        setDatabaseStarted(true)
+    }
 
     useEffect(() => {
         if (!databaseStarted) {
-            async function initializeDB() {
-                await initDB();
-                setDatabaseStarted(true)
-            }
-
             initializeDB().then();
         }
     }, []);
@@ -40,7 +38,7 @@ const Home = () => {
 
 useFocusEffect(
     useCallback(() => {
-        syncEventsWithFirebase();
+        syncEventsWithFirebase().then();
         const getEvents = async () => {
             const eventsData = await getAllEvents();
             if (eventsData !== null) {

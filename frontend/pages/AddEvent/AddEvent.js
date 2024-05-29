@@ -16,7 +16,7 @@ import CameraInput from "../../components/form/CameraInput/CameraInput";
 import MapInput from "../../components/form/Map/MapInput/MapInput";
 import MapScreen from "../../components/form/Map/MapScreen/MapScreen";
 import MapButtons from "../../components/form/Map/MapButtons/MapButtons";
-import {insertEvent} from "../../database/sqlite"
+import {insertEvent} from "../../database/api"
 
 
 const AddEvent = () => {
@@ -164,11 +164,12 @@ const AddEvent = () => {
                 location_lat: location.coords.latitude,
                 location_long: location.coords.longitude,
                 description,
+                image: imgUri
             }
-            console.log(location)
+            console.info(imgUri);
             existingEvents.push(newEvent);
 
-            await insertEvent(newEvent)
+            await insertEvent(newEvent);
 
             await AsyncStorage.setItem('events-mock', JSON.stringify(existingEvents));
             console.log('Evento salvo com sucesso: ', newEvent);
