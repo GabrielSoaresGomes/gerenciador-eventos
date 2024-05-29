@@ -5,8 +5,7 @@ import {
 import {useCallback, useEffect, useState} from "react";
 import Card from "../../components/Card/Card";
 import AddButton from "../../components/AddButton/AddButton";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Api from '../../api';
+import { syncEventsWithFirebase } from '../../api';
 
 const Home = () => {
 
@@ -27,26 +26,9 @@ const Home = () => {
         return () => backHandler.remove();
     }, []);
 
-    useEffect(() => {
-        async function fetchData() {
-            const result = await Api.get('');
-            console.log('result: ', result);
-        }
-        fetchData();
-    }, []);
-
 useFocusEffect(
     useCallback(() => {
-        const getEvents = async () => {
-            const eventsData = await AsyncStorage.getItem('events-mock');
-            if (eventsData !== null) {
-                setEvents(JSON.parse(eventsData));
-            } else {
-                setEvents([]);
-            }
-        };
-
-        getEvents();
+        syncEventsWithFirebase();
     }, [])
 );
 

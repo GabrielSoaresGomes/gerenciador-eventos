@@ -1,3 +1,23 @@
+import {dbFirebase} from './firebase-config';
+import NetInfo from "@react-native-community/netinfo";
+
+const syncEventsWithFirebase = async () => {
+    console.log('Iniciando sincronização com firebase');
+    const connection = await NetInfo.fetch();
+    if (connection.isConnected && connection.isInternetReachable) {
+        console.log('Conexão com internet OK');
+        // TODO - Chamar o método do bernardo de listar todos eventos
+        const events = [{id: 1}];
+        for (const event of events) {
+            const documentReference = dbFirebase.collection('events').doc(`${event?.id}`);
+            const document = await documentReference.get();
+            console.log(document);
+        }
+    }
+}
+export { syncEventsWithFirebase };
+
+/*
 import axios from 'axios';
 import * as Network from 'expo-network';
 
@@ -97,3 +117,4 @@ class Api {
 
 const ApiInstance = new Api();
 export default ApiInstance;
+ */
