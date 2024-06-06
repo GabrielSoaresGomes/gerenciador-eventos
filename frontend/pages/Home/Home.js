@@ -1,4 +1,4 @@
-import {BackHandler, ScrollView, TouchableOpacity} from "react-native";
+import {BackHandler, Button, ScrollView, ToastAndroid, TouchableOpacity} from "react-native";
 import {
     useNavigation, useFocusEffect
 } from '@react-navigation/native';
@@ -14,7 +14,84 @@ import {
 } from "../../database/api";
 import NetInfo from "@react-native-community/netinfo";
 
+// LOGIN OAUTH angolano
+/*
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+WebBrowser.maybeCompleteAuthSession();
+*/
+// FIM LOGIN OAUTH angolano
+
+// LOGIN GPT
+import * as AuthSession from 'expo-auth-session';
+import * as Google from 'expo-auth-session/providers/google';
+
+const useProxy = AuthSession.useProxy();
+const redirectUri = AuthSession.makeRedirectUri({
+    useProxy,
+});
+// FIM LOGIN GPT
+
 const Home = () => {
+    // LOGIN OAUTH angolano
+    /*
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        androidClientId: '957534108537-qelqm9vldl9h315fc461kj19hc3sqll3.apps.googleusercontent.com'
+    });
+
+    const callAuthGoogle = async () => {
+        await promptAsync();
+    }
+
+    const getUserInfo = async (responseAuth) => {
+        try {
+            const response = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+                headers: {
+                    Authorization: `Bearer ${responseAuth?.authentication?.accessToken}`
+                }
+            })
+        } catch (error) {
+            console.log('ERROR: ', error)
+        }
+    }
+
+    const getResponse = async () => {
+        if (response) {
+            if (response?.type === 'error') {
+                ToastAndroid.show('Erro ao obter informações do usuário na autenticação pelo Google', ToastAndroid.SHORT);
+            } else if (response?.type === 'cancel') {
+                ToastAndroid.show('Login pelo google cancelado', ToastAndroid.SHORT);
+            } else if (response?.type === 'success') {
+                await getUserInfo(response);
+            }
+        }
+    }
+
+    useEffect(() => {
+        getResponse().then();
+    }, [response]);
+     */
+    // FIM LOGIN OAUTH angolano
+
+
+    // login gpt
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        expoClientId: 'YOUR_EXPO_CLIENT_ID',
+        iosClientId: 'YOUR_IOS_CLIENT_ID',
+        androidClientId: 'YOUR_ANDROID_CLIENT_ID',
+        webClientId: 'YOUR_WEB_CLIENT_ID',
+        redirectUri,
+    });
+
+    useEffect(() => {
+        if (response?.type === 'success') {
+            const {authentication} = response;
+            // Use o token de autenticação para se comunicar com a API do Google
+            console.log(authentication);
+        }
+    }, [response]);
+    // fim login gpt
+
 
     const [databaseStarted, setDatabaseStarted] = useState(false);
     const [events, setEvents] = useState([]);
@@ -84,6 +161,7 @@ const Home = () => {
     return (
         <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
             <AddButton onPress={() => navigation.navigate('AddEvent')}/>
+            <Button title={'Logar'} onPress={promptAsync}/>
             {events?.map((event) => {
                 return (
                     <TouchableOpacity

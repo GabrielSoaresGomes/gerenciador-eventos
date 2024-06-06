@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "Gerenciador de Eventos",
+    "scheme": "gerenciador-eventos",
     "slug": "gerenciador-eventos",
     "version": "1.0.0",
     "orientation": "portrait",
