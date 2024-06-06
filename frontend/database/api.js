@@ -1,4 +1,4 @@
-import { collection, doc, updateDoc, setDoc, getDocs, deleteDoc} from 'firebase/firestore';
+import {collection, doc, updateDoc, setDoc, getDocs, deleteDoc} from 'firebase/firestore';
 import * as SQLite from 'expo-sqlite';
 import NetInfo from '@react-native-community/netinfo';
 import {dbFirebase} from '../firebase-config';
@@ -88,21 +88,29 @@ const recreateTableEvents = async () => {
 }
 
 const getAllEventsToAdd = async () => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
-    const result = await db?.getAllAsync(`
-        SELECT *
-        FROM events_to_add
-    `);
-    return result;
+    try {
+        const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const result = await db?.getAllAsync(`
+            SELECT *
+            FROM events_to_add
+        `);
+        return result;
+    } catch (error) {
+        console.error(`Falha ao listar eventos para criar, ERROR: `, error)
+    }
 }
 
 const getAllEventsToDelete = async () => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
-    const result = await db?.getAllAsync(`
-        SELECT *
-        FROM events_to_delete
-    `);
-    return result;
+    try {
+        const db = await SQLite.openDatabaseAsync("manager_events.db");
+            const result = await db?.getAllAsync(`
+            SELECT *
+            FROM events_to_delete
+        `);
+        return result;
+    } catch (error) {
+        console.error(`Falha ao listar eventos para apagar, ERROR: `, error)
+    }
 }
 
 const getEventById = async (eventId) => {
@@ -146,8 +154,12 @@ const deleteEventToDeleteById = async (eventId) => {
 }
 
 const removeDocumentFirebase = async (eventId) => {
-    const docRef = doc(dbFirebase, 'events', `${eventId}`);
-    await deleteDoc(docRef);
+    try {
+        const docRef = doc(dbFirebase, 'events', `${eventId}`);
+        await deleteDoc(docRef);
+    } catch (error) {
+        console.error(`Falha ao apagar o evento no firebase: ${JSON.stringify(eventId)}, ERROR: `, error)
+    }
 }
 
 const insertEvent = async (eventBody) => {
@@ -193,19 +205,23 @@ const insertToQueueDelete = async (eventBody) => {
 };
 
 const addDocumentFirebase = async (event) => {
-    const docRef = doc(dbFirebase, "events", `${event?.id}`);
-    await setDoc(docRef, {
-        title: event?.title,
-        event_id: event?.uuid,
-        date: event?.date,
-        time_start: event?.time_start,
-        time_end: event?.time_end,
-        address: event?.address,
-        location_lat: event?.location_lat,
-        location_long: event?.location_long,
-        description: event?.description,
-        image: event?.image
-    });
+    try {
+        const docRef = doc(dbFirebase, "events", `${event?.event_uuid}`);
+        await setDoc(docRef, {
+            title: event?.title,
+            event_id: event?.uuid,
+            date: event?.date,
+            time_start: event?.time_start,
+            time_end: event?.time_end,
+            address: event?.address,
+            location_lat: event?.location_lat,
+            location_long: event?.location_long,
+            description: event?.description,
+            image: event?.image
+        });
+    } catch (error) {
+        console.error(`Falha ao criar o evento no firebase: ${JSON.stringify(event)}, ERROR: `, error)
+    }
 }
 
 const updateEvent = async (eventId, eventBody) => {
@@ -239,11 +255,10 @@ const syncEventsWithFirebase = async () => {
     if (connection.isConnected && connection.isInternetReachable) {
         console.info('Conexão com internet OK');
         try {
-
             console.info('Sincronizando eventos para adicionar!');
             const eventsToAdd = await getAllEventsToAdd();
             for (const event of eventsToAdd) {
-                event.uuid = randomUUID();
+                event.event_uuid = randomUUID();
                 await addDocumentFirebase(event);
                 await deleteEventToAddById(event?.id);
             }

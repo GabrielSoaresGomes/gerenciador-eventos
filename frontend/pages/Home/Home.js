@@ -74,7 +74,7 @@ const Home = () => {
     const handleCardDoubleTap = async (event) => {
         const connection = await NetInfo.fetch();
         if (connection.isConnected && connection.isInternetReachable) {
-            removeDocumentFirebase(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no firebase`));
+            removeDocumentFirebase(event?.event_uuid).then(() => console.info(`Evento de ID ${event?.id} apagado no firebase`));
         } else {
             insertToQueueDelete(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no sqlite`));
         }
