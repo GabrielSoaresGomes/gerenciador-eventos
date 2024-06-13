@@ -1,4 +1,4 @@
-import {collection, doc, updateDoc, setDoc, getDocs, deleteDoc} from 'firebase/firestore';
+import {collection, doc, updateDoc, setDoc, getDocs, deleteDoc, query, where} from 'firebase/firestore';
 import * as SQLite from 'expo-sqlite';
 import NetInfo from '@react-native-community/netinfo';
 import {dbFirebase} from '../firebase-config';
@@ -6,56 +6,8 @@ import {randomUUID} from "expo-crypto";
 
 const initDB = async () => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
-    await db.execAsync(`
-        -- DROP TABLE IF EXISTS events;
-        CREATE TABLE IF NOT EXISTS events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            event_uuid TEXT,
-            title TEXT NOT NULL,
-            date TEXT NOT NULL,
-            time_start TEXT NOT NULL,
-            time_end TEXT NOT NULL,
-            location_lat TEXT NOT NULL,
-            location_long TEXT NOT NULL,
-            address TEXT NOT NULL,
-            description TEXT NOT NULL,
-            image BYTEA
-        );
-        -- DROP TABLE IF EXISTS events_to_add;
-        CREATE TABLE IF NOT EXISTS events_to_add (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            title TEXT NOT NULL,
-            date TEXT NOT NULL,
-            time_start TEXT NOT NULL,
-            time_end TEXT NOT NULL,
-            location_lat TEXT NOT NULL,
-            location_long TEXT NOT NULL,
-            address TEXT NOT NULL,
-            description TEXT NOT NULL,
-            image BYTEA
-        );
-        -- DROP TABLE IF EXISTS events_to_delete;
-        CREATE TABLE IF NOT EXISTS events_to_delete (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            event_uuid INTEGER
-        );
-        -- DROP TABLE IF EXISTS events_to_update;
-        CREATE TABLE IF NOT EXISTS events_to_add (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            event_uuid INTEGER,
-            title TEXT NOT NULL,
-            date TEXT NOT NULL,
-            time_start TEXT NOT NULL,
-            time_end TEXT NOT NULL,
-            location_lat TEXT NOT NULL,
-            location_long TEXT NOT NULL,
-            address TEXT NOT NULL,
-            description TEXT NOT NULL,
-            image BYTEA
-        );
-        `
-    );
-    console.log('Tabela criada com sucesso!!');
+    await recreateTableEvents();
+    console.info('Tabela criada com sucesso!!');
 };
 
 const getAllEvents = async () => {
@@ -84,6 +36,25 @@ const recreateTableEvents = async () => {
             description TEXT NOT NULL,
             image BYTEA
         );
+        DROP TABLE IF EXISTS events_to_add;
+        CREATE TABLE IF NOT EXISTS events_to_add (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            title TEXT NOT NULL,
+            date TEXT NOT NULL,
+            time_start TEXT NOT NULL,
+            time_end TEXT NOT NULL,
+            location_lat TEXT NOT NULL,
+            location_long TEXT NOT NULL,
+            address TEXT NOT NULL,
+            description TEXT NOT NULL,
+            image BYTEA
+        );
+        DROP TABLE IF EXISTS events_to_delete;
+        CREATE TABLE IF NOT EXISTS events_to_delete (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            event_uuid INTEGER
+        );
+
     `);
 }
 
@@ -96,7 +67,8 @@ const getAllEventsToAdd = async () => {
         `);
         return result;
     } catch (error) {
-        console.error(`Falha ao listar eventos para criar, ERROR: `, error)
+        console.error(`Falha ao listar eventos para criar, ERROR: `, error);
+        return [];
     }
 }
 
@@ -109,7 +81,8 @@ const getAllEventsToDelete = async () => {
         `);
         return result;
     } catch (error) {
-        console.error(`Falha ao listar eventos para apagar, ERROR: `, error)
+        console.error(`Falha ao listar eventos para apagar, ERROR: `, error);
+        return [];
     }
 }
 
@@ -155,8 +128,15 @@ const deleteEventToDeleteById = async (eventId) => {
 
 const removeDocumentFirebase = async (eventId) => {
     try {
-        const docRef = doc(dbFirebase, 'events', `${eventId}`);
-        await deleteDoc(docRef);
+        const eventsRef = collection(dbFirebase, 'events');
+        const q = query(eventsRef, where('event_id', '==', eventId));
+        getDocs(q).then((querySnapshot) => {
+            querySnapshot.forEach(async (document) => {
+                await deleteDoc(doc(dbFirebase, 'events', document.id));
+            });
+        }).catch((error) => {
+            console.error("Error getting documents: ", error);
+        });
     } catch (error) {
         console.error(`Falha ao apagar o evento no firebase: ${JSON.stringify(eventId)}, ERROR: `, error)
     }
@@ -169,7 +149,7 @@ const insertEvent = async (eventBody) => {
         INSERT INTO events (event_uuid, title, date, time_start, time_end, address, location_lat, location_long, description, image)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING id
-    `, [eventBody.id, eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
+    `, [eventBody.event_id, eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
         return result;
     } catch (error) {
         console.error('Erro ao salvar evento: ', error);

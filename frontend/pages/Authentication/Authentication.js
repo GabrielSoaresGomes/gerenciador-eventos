@@ -14,10 +14,10 @@ const Authentication = () => {
                 promptMessage: 'Autentique-se para continuar',
             });
             if (result.success) {
-                console.log('Usuário autenticado com sucesso');
+                console.info('Usuário autenticado com sucesso');
                 navigation.navigate('Home');
             } else {
-                console.log('Falha na autenticação');
+                console.warn('Falha na autenticação');
             }
         } catch (error) {
             console.error('Erro ao autenticar:', error);

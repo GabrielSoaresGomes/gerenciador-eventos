@@ -144,7 +144,7 @@ const AddEvent = () => {
 
             fields.forEach(field => {
                 if (!field.name || field.name === '' || field.name === 'não escolhido') {
-                    console.log(field.message);
+                    console.warn(field.message);
                     hasError = true;
                 }
             });

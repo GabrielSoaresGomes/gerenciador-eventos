@@ -46,7 +46,7 @@ const MapScreen = ({location, showMap, address, setAddress, setLocation}) => {
                     coordinate={{
                         latitude: location.coords.latitude, longitude: location.coords.longitude,
                     }}
-                    onCalloutPress={() => console.log("Callout pressionado!")}
+                    onCalloutPress={() => {}}
                 >
                     <Callout>
                         <Text>Localização:</Text>
