@@ -1,4 +1,4 @@
-import {BackHandler, Button, ScrollView, ToastAndroid, TouchableOpacity} from "react-native";
+import {BackHandler, Button, ScrollView, TouchableOpacity} from "react-native";
 import {
     useNavigation, useFocusEffect
 } from '@react-navigation/native';
