@@ -1,32 +1,46 @@
-import {Button, Image, Text, TextInput, TouchableOpacity, View} from "react-native";
-import {useState} from "react";
+import {Text, TouchableOpacity, View} from "react-native";
+import {useCallback, useEffect, useState} from "react";
 import style from "./styleLogin";
-import passwordIconOn from "../../assets/visibility_24dp_FILL0_wght400_GRAD0_opsz24.png";
-import passwordIconOff from "../../assets/visibility_off_24dp_FILL0_wght400_GRAD0_opsz24.png";
+import EmailInput from "../../components/EmailInput/EmailInput";
+import PasswordInput from "../../components/PasswordInput/PasswordInput";
+import {useFocusEffect, useNavigation} from "@react-navigation/native";
+import {getAllEvents, initDB, selectUserByEmailAndPassword, syncEventsWithFirebase} from "../../database/api"
+
 
 const Login = () => {
+    const [databaseStarted, setDatabaseStarted] = useState(false);
+
+    async function initializeDB() {
+        await initDB();
+        setDatabaseStarted(true)
+    }
+
+    useEffect(() => {
+        if (!databaseStarted) {
+            initializeDB().then();
+        }
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            const fetchEvents = async () => {
+                await syncEventsWithFirebase();
+            };
+
+            fetchEvents().then();
+        }, [])
+    );
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [hidePassword, setHidePassword] = useState(true);
-
-    const changeEmailText = (value) => {
-        setEmail(value);
-    }
-
-    const changePasswordText = (value) => {
-        setPassword(value);
-    }
-
-    const switchPasswordVisibility = () => {
-        setHidePassword(!hidePassword);
-    }
+    const navigation = useNavigation();
 
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(String(email).toLowerCase());
     }
 
-    const loginAction = () => {
+    const loginAction = async () => {
         if (email === "" || email === null || email === undefined){
             console.warn("É obrigatório preencher o email!");
         } else if (!validateEmail(email)){
@@ -34,33 +48,36 @@ const Login = () => {
         } else if (password === "" || password === null || password === undefined){
             console.warn("É obrigatório preencher a senha!");
         }else {
-            console.log('tá funfando?');
+            const userData = {
+                email,
+                password
+            }
+            const resultLogin = await selectUserByEmailAndPassword(userData);
+            console.log(resultLogin);
+            if (resultLogin?.length) {
+                navigation.navigate('Home');
+            }else {
+                console.warn(`Usuário ou senha inválidos! ${JSON.stringify(userData)}`);
+            }
         }
+    }
+
+    const handleRegisterRequest = () => {
+        navigation.navigate('Register');
     }
 
     return (
         <View style={style.container}>
-            <Text style={style.textDiv}>Email</Text>
-            <TextInput textContentType={"emailAddress"} style={style.divInput} value={email} onChangeText={changeEmailText} />
-            <Text style={style.textDiv}>Password</Text>
-            <View style={style.passwordContainer}>
-                <TextInput
-                    textContentType={"password"}
-                    secureTextEntry={hidePassword}
-                    style={[style.divInput, style.passwordInput]}
-                    value={password}
-                    onChangeText={changePasswordText}
-                />
-                <TouchableOpacity style={style.passwordButton} onPress={switchPasswordVisibility}>
-                    <Image style={style.image} source={hidePassword ? passwordIconOff : passwordIconOn}/>
+            <EmailInput  email={email} setEmail={setEmail}/>
+            <PasswordInput password={password} setPassword={setPassword} />
+            <View>
+                <TouchableOpacity style={style.loginButton} onPress={loginAction}>
+                    <Text style={style.loginButtonText}> Entrar </Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={style.registerButton} onPress={handleRegisterRequest}>
+                    <Text style={style.registerButtonText}> Registrar-se</Text>
                 </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={loginAction}>
-                <Text> Login </Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-                <Text> Register Here</Text>
-            </TouchableOpacity>
         </View>
     );
 }

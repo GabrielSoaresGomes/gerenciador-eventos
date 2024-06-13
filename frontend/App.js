@@ -4,6 +4,7 @@ import Home from "./pages/Home/Home";
 import AddEvent from "./pages/AddEvent/AddEvent";
 import Authentication from "./pages/Authentication/Authentication";
 import Login from "./pages/Login/Login";
+import Register from "./pages/Register/Register";
 
 
 const RootStack = createNativeStackNavigator({
@@ -36,6 +37,13 @@ const RootStack = createNativeStackNavigator({
                 title: 'Login',
                 headerTitleAlign: 'center',
                 headerBackVisible: false
+            }
+        },
+        Register: {
+            screen: Register,
+            options: {
+                title: 'Register',
+                headerTitleAlign: 'center'
             }
         }
     },

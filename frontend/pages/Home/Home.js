@@ -1,9 +1,8 @@
 import {
     BackHandler,
-    Button,
     ScrollView,
     TouchableOpacity,
-    RefreshControl
+    RefreshControl, StyleSheet, Dimensions, View
 } from "react-native";
 import {
     useNavigation,
@@ -24,8 +23,19 @@ import {
     insertToQueueDelete
 } from "../../database/api";
 import NetInfo from "@react-native-community/netinfo";
+import LogoutButton from "../../components/LogoutButton/LogoutButton";
 
 const Home = () => {
+
+    const size = Dimensions.get('window').width;
+
+    const style = StyleSheet.create({
+        actionButtons: {
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between"
+        }
+    });
     const [databaseStarted, setDatabaseStarted] = useState(false);
     const [events, setEvents] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -106,7 +116,11 @@ const Home = () => {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
         >
-            <AddButton onPress={() => navigation.navigate('AddEvent')} />
+            <View style={style.actionButtons}>
+                <LogoutButton />
+                <AddButton onPress={() => navigation.navigate('AddEvent')} />
+            </View>
+
             {events?.map((event) => (
                 <TouchableOpacity
                     key={event.id}

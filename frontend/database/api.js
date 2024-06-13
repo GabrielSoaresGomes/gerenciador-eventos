@@ -6,9 +6,8 @@ import {randomUUID} from "expo-crypto";
 
 const initDB = async () => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
-    await recreateTableEvents();
-    await createUserTable();
-    console.info('Tabela criada com sucesso!!');
+    await recreateTables();
+    console.info('Tabelas criadas com sucesso!!');
 };
 
 const getAllEvents = async () => {
@@ -20,31 +19,7 @@ const getAllEvents = async () => {
     return result;
 }
 
-const createUserTable = async () => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
-    await db.execAsync(`
-        DROP TABLE IF EXISTS user;
-        CREATE TABLE IF NOT EXISTS user (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            user_uuid TEXT,
-            email TEXT NOT NULL,
-            password TEXT NOT NULL
-        );
-        DROP TABLE IF EXISTS user_to_add;
-        CREATE TABLE IF NOT EXISTS user_to_add (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            email TEXT NOT NULL,
-            password TEXT NOT NULL
-        );
-        DROP TABLE IF EXISTS user_to_delete;
-        CREATE TABLE IF NOT EXISTS user_to_delete (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            user_uuid TEXT
-        );
-    `);
-}
-
-const recreateTableEvents = async () => {
+const recreateTables = async () => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     await db.execAsync(`
         DROP TABLE IF EXISTS events;
@@ -79,6 +54,25 @@ const recreateTableEvents = async () => {
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             event_uuid INTEGER
         );
+        DROP TABLE IF EXISTS user;
+        CREATE TABLE IF NOT EXISTS user (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            user_uuid TEXT,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        );
+        DROP TABLE IF EXISTS user_to_add;
+        CREATE TABLE IF NOT EXISTS user_to_add (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            user_uuid TEXT,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        );
+        DROP TABLE IF EXISTS user_to_delete;
+        CREATE TABLE IF NOT EXISTS user_to_delete (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            user_uuid TEXT
+        );
 
     `);
 }
@@ -111,15 +105,15 @@ const getAllEventsToDelete = async () => {
     }
 }
 
-const getEventById = async (eventId) => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
-    const result = await db.getFirstAsync(`
-            SELECT *
-            FROM events
-            WHERE id = ?
-        `, [eventId]);
-    return result;
-}
+// const getEventById = async (eventId) => {
+//     const db = await SQLite.openDatabaseAsync("manager_events.db");
+//     const result = await db.getFirstAsync(`
+//             SELECT *
+//             FROM events
+//             WHERE id = ?
+//         `, [eventId]);
+//     return result;
+// }
 
 const deleteEventToAddById = async (eventId) => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
@@ -172,15 +166,27 @@ const insertToQueueAdd = async (eventBody) => {
     try {
         const db = await SQLite.openDatabaseAsync("manager_events.db");
         const result = await db.runAsync(`
-        INSERT INTO events_to_add (title, date, time_start, time_end, address, location_lat, location_long, description, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        RETURNING id
-    `, [eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
+            INSERT INTO events_to_add (title, date, time_start, time_end, address, location_lat, location_long, description, image)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            RETURNING id
+        `, [eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
         return result;
     } catch (error) {
         console.error('Erro ao salvar evento: ', error);
     }
 };
+
+const insertUserToQueueAdd = async (userBody) => {
+    try {
+        const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const result = await db.runAsync(`
+            INSERT INTO user_to_add (email, password, user_uuid)
+            VALUES (?, ?, ?)
+        `, [userBody?.email, userBody?.password, userBody?.user_uuid]);
+    } catch (error) {
+        console.error('Erro ao inserir usuário na fila de inserção: ', error);
+    }
+}
 
 const insertToQueueDelete = async (eventBody) => {
     try {
@@ -216,29 +222,84 @@ const addDocumentFirebase = async (event) => {
     }
 }
 
-const updateEvent = async (eventId, eventBody) => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
-    const result = await db.runAsync(`
-        UPDATE events
-        SET title = ?, date = ?, time_start = ?, time_end = ?, address = ?, location_lat = ?, location_long = ?, description = ?, image = ?
-        RETURNING id
-    `, [eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
-    return result;
-};
+// const updateEvent = async (eventId, eventBody) => {
+//     const db = await SQLite.openDatabaseAsync("manager_events.db");
+//     const result = await db.runAsync(`
+//         UPDATE events
+//         SET title = ?, date = ?, time_start = ?, time_end = ?, address = ?, location_lat = ?, location_long = ?, description = ?, image = ?
+//         RETURNING id
+//     `, [eventBody.title, eventBody.date, eventBody.time_start, eventBody.time_end, eventBody.address, eventBody.location_lat, eventBody.location_long, eventBody.description, eventBody.image]);
+//     return result;
+// };
+//
+// const updateDocumentFirebase = async (event) => {
+//     const docRef = doc(dbFirebase, "events", `${event?.id}`);
+//     await updateDoc(docRef, {
+//         title: event?.title,
+//         date: event?.date,
+//         time_start: event?.time_start,
+//         time_end: event?.time_end,
+//         address: event?.address,
+//         location_lat: event?.location_lat,
+//         location_long: event?.location_long,
+//         description: event?.description,
+//         image: event?.image
+//     });
+// }
 
-const updateDocumentFirebase = async (event) => {
-    const docRef = doc(dbFirebase, "events", `${event?.id}`);
-    await updateDoc(docRef, {
-        title: event?.title,
-        date: event?.date,
-        time_start: event?.time_start,
-        time_end: event?.time_end,
-        address: event?.address,
-        location_lat: event?.location_lat,
-        location_long: event?.location_long,
-        description: event?.description,
-        image: event?.image
-    });
+const insertUserOnRemote = async (userBody) => {
+    try {
+        const docRef = doc(dbFirebase, "users", `${userBody?.user_uuid}`);
+        await setDoc(docRef, {
+            email: userBody?.email,
+            password: userBody?.password,
+            user_uuid: userBody?.user_uuid
+        });
+        return true;
+    } catch (error) {
+        console.error(`Erro ao inserir usuário: ${JSON.stringify(userBody)} no remoto: `, error);
+    }
+    return false;
+}
+
+const insertUserOnLocal = async (userBody) => {
+    try {
+        const db = await SQLite.openDatabaseAsync('manager_events.db');
+        await db.runAsync(`
+            INSERT INTO user (email, password, user_uuid)
+            VALUES (?, ?, ?)
+        `, [userBody?.email, userBody?.password, userBody?.user_uuid]);
+    } catch (error) {
+        console.error('Erro ao registrar um novo usuário: ', error);
+    }
+}
+
+const selectUserByEmailAndPassword = async (userData) => {
+    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    const result = await db.getAllAsync(`
+        SELECT * 
+        FROM user
+        WHERE email = ?
+        AND password = ?
+    `, [userData?.email, userData?.password]);
+    return result;
+}
+
+const getAllUsersToCreateOnRemote = async () => {
+    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    const result = await db.getAllAsync(`
+        SELECT *
+        FROM user_to_add
+    `);
+    return result;
+}
+
+const deleteUserToCreateOnRemoteById = async (id) => {
+    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    await db.runAsync(`
+        DELETE FROM user_to_add
+        WHERE id = ?
+    `, [id]);
 }
 
 const syncEventsWithFirebase = async () => {
@@ -262,13 +323,28 @@ const syncEventsWithFirebase = async () => {
                 await deleteEventToDeleteById(event?.id);
             }
 
-            console.info('Iniciando sincronização do Firebase para o banco local!');
-            const documents = await getDocs(collection(dbFirebase, 'events'));
-            await recreateTableEvents();
+            console.info('Sincronização de usuários para serem criados no Remoto');
+            const usersToCreate = await getAllUsersToCreateOnRemote();
+            for (const user of usersToCreate) {
+                await insertUserOnRemote(user);
+                await deleteUserToCreateOnRemoteById(user?.id);
 
-            for (const document of documents.docs) {
-                await insertEvent(document.data());
             }
+
+            await recreateTables();
+            console.info('Iniciando sincronização da Collection de Eventos para o banco local!');
+            const eventsDocuments = await getDocs(collection(dbFirebase, 'events'));
+
+            for (const event of eventsDocuments.docs) {
+                await insertEvent(event.data());
+            }
+
+            console.info('Iniciando sincronização da Collection de Usuários para o banco local!');
+            const usersDocuments = await getDocs(collection(dbFirebase, 'users'));
+            for (const user of usersDocuments?.docs) {
+                await insertUserOnLocal(user.data());
+            }
+
         } catch (error) {
             console.error(`Erro ao sincronizar firebase com o local`, error);
         }
@@ -280,11 +356,14 @@ const syncEventsWithFirebase = async () => {
 export {
     initDB,
     getAllEvents,
-    getEventById,
+    // getEventById,
     insertEvent,
     insertToQueueDelete,
     insertToQueueAdd,
+    insertUserToQueueAdd,
     syncEventsWithFirebase,
     removeDocumentFirebase,
-    addDocumentFirebase
+    addDocumentFirebase,
+    selectUserByEmailAndPassword,
+    insertUserOnRemote
 };

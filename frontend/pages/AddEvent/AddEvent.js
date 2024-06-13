@@ -153,7 +153,6 @@ const AddEvent = () => {
                 return;
             }
 
-            const existingEvents = JSON.parse(await AsyncStorage.getItem('events-mock') || '[]');
             const id = randomUUID();
             const newEvent = {
                 id,
@@ -167,8 +166,6 @@ const AddEvent = () => {
                 description,
                 image: imgUri
             }
-            console.info(imgUri);
-            existingEvents.push(newEvent);
 
             const connection = await NetInfo.fetch();
             if (connection.isConnected && connection.isInternetReachable) {
