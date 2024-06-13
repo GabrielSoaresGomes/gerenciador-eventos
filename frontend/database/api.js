@@ -209,7 +209,7 @@ const addDocumentFirebase = async (event) => {
         const docRef = doc(dbFirebase, "events", `${event?.event_uuid}`);
         await setDoc(docRef, {
             title: event?.title,
-            event_id: event?.uuid,
+            event_id: event?.id,
             date: event?.date,
             time_start: event?.time_start,
             time_end: event?.time_end,
