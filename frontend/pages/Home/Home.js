@@ -89,14 +89,14 @@ const Home = () => {
     const handleCardDoubleTap = async (event) => {
         const connection = await NetInfo.fetch();
         if (connection.isConnected && connection.isInternetReachable) {
-            removeDocumentFirebase(event?.event_uuid).then(() => console.info(`Evento de ID ${event?.id} apagado no firebase`));
+            await removeDocumentFirebase(event?.event_uuid);
             await syncEventsWithFirebase();
             const eventsData = await getAllEvents();
             setEvents(eventsData || []);
         } else {
             insertToQueueDelete(event?.id).then(() => console.info(`Evento de ID ${event?.id} apagado no sqlite`));
+            setEvents(events.filter(ev => ev?.id !== event?.id));
         }
-        setEvents(events.filter(ev => ev?.id !== event?.id));
     };
 
     return (

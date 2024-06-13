@@ -7,6 +7,7 @@ import {randomUUID} from "expo-crypto";
 const initDB = async () => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     await recreateTableEvents();
+    await createUserTable();
     console.info('Tabela criada com sucesso!!');
 };
 
@@ -17,6 +18,30 @@ const getAllEvents = async () => {
             FROM events
         `);
     return result;
+}
+
+const createUserTable = async () => {
+    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    await db.execAsync(`
+        DROP TABLE IF EXISTS user;
+        CREATE TABLE IF NOT EXISTS user (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            user_uuid TEXT,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        );
+        DROP TABLE IF EXISTS user_to_add;
+        CREATE TABLE IF NOT EXISTS user_to_add (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        );
+        DROP TABLE IF EXISTS user_to_delete;
+        CREATE TABLE IF NOT EXISTS user_to_delete (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            user_uuid TEXT
+        );
+    `);
 }
 
 const recreateTableEvents = async () => {
@@ -96,16 +121,6 @@ const getEventById = async (eventId) => {
     return result;
 }
 
-const deleteEventById = async (eventId) => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
-    const result = await db.runAsync(`
-        DELETE FROM events
-        WHERE id = ?
-        RETURNING id
-    `, [eventId]);
-    return result;
-}
-
 const deleteEventToAddById = async (eventId) => {
     const db = await SQLite.openDatabaseAsync("manager_events.db");
     const result = await db.runAsync(`
@@ -130,13 +145,10 @@ const removeDocumentFirebase = async (eventId) => {
     try {
         const eventsRef = collection(dbFirebase, 'events');
         const q = query(eventsRef, where('event_id', '==', eventId));
-        getDocs(q).then((querySnapshot) => {
-            querySnapshot.forEach(async (document) => {
-                await deleteDoc(doc(dbFirebase, 'events', document.id));
-            });
-        }).catch((error) => {
-            console.error("Error getting documents: ", error);
-        });
+        const querySnapshot = await getDocs(q);
+        for (const document of querySnapshot.docs) {
+            await deleteDoc(doc(dbFirebase, 'events', document?.id));
+        }
     } catch (error) {
         console.error(`Falha ao apagar o evento no firebase: ${JSON.stringify(eventId)}, ERROR: `, error)
     }
@@ -269,7 +281,6 @@ export {
     initDB,
     getAllEvents,
     getEventById,
-    deleteEventById,
     insertEvent,
     insertToQueueDelete,
     insertToQueueAdd,

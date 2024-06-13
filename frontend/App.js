@@ -3,6 +3,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Home from "./pages/Home/Home";
 import AddEvent from "./pages/AddEvent/AddEvent";
 import Authentication from "./pages/Authentication/Authentication";
+import Login from "./pages/Login/Login";
 
 
 const RootStack = createNativeStackNavigator({
@@ -27,6 +28,14 @@ const RootStack = createNativeStackNavigator({
             screen: AddEvent,
             options: {
                 title: 'Adicionar Eventos'
+            }
+        },
+        Login: {
+            screen: Login,
+            options: {
+                title: 'Login',
+                headerTitleAlign: 'center',
+                headerBackVisible: false
             }
         }
     },

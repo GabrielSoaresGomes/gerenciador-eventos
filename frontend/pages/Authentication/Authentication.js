@@ -15,7 +15,7 @@ const Authentication = () => {
             });
             if (result.success) {
                 console.info('Usuário autenticado com sucesso');
-                navigation.navigate('Home');
+                navigation.navigate('Login');
             } else {
                 console.warn('Falha na autenticação');
             }
