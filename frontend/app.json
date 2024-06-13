@@ -1,14 +1,14 @@
 {
   "expo": {
     "name": "Gerenciador de Eventos",
-    "scheme": "gerenciador-eventos",
+    "scheme": "com.gabrielsoaresgomes.gerenciadoreventos",
     "slug": "gerenciador-eventos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/icon.jpeg",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#2edae0"
     },
@@ -37,7 +37,7 @@
       "package": "com.gabrielsoaresgomes.gerenciadoreventos"
     },
     "web": {
-      "favicon": "./assets/icon.jpeg"
+      "favicon": "./assets/icon.png"
     },
     "extra": {
       "eas": {

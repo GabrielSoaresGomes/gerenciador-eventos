@@ -14,84 +14,72 @@ import {
 } from "../../database/api";
 import NetInfo from "@react-native-community/netinfo";
 
-// LOGIN OAUTH angolano
-/*
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from "expo-web-browser";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Google from "expo-auth-session/providers/google";
+
 WebBrowser.maybeCompleteAuthSession();
-*/
-// FIM LOGIN OAUTH angolano
 
-// LOGIN GPT
-import * as AuthSession from 'expo-auth-session';
-import * as Google from 'expo-auth-session/providers/google';
-
-const useProxy = AuthSession.useProxy();
-const redirectUri = AuthSession.makeRedirectUri({
-    useProxy,
-});
-// FIM LOGIN GPT
 
 const Home = () => {
-    // LOGIN OAUTH angolano
-    /*
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        androidClientId: '957534108537-qelqm9vldl9h315fc461kj19hc3sqll3.apps.googleusercontent.com'
-    });
+    const [userInfo, setUserInfo] = useState(null);
+    const config = {
+        androidClientId: '957534108537-qelqm9vldl9h315fc461kj19hc3sqll3.apps.googleusercontent.com',
+        webClientId: '957534108537-3tqtuidj3rsgrkp4ms82andvr5qff055.apps.googleusercontent.com',
+    };
+    const [request, response, promptAsync] = Google.useAuthRequest(config);
 
-    const callAuthGoogle = async () => {
-        await promptAsync();
-    }
-
-    const getUserInfo = async (responseAuth) => {
+    const getUserInfo = async (token) => {
+        //absent token
+        if (!token) return;
+        //present token
         try {
-            const response = await fetch('https://www.googleapis.com/userinfo/v2/me', {
-                headers: {
-                    Authorization: `Bearer ${responseAuth?.authentication?.accessToken}`
+            const response = await fetch(
+                "https://www.googleapis.com/userinfo/v2/me",
+                {
+                    headers: {Authorization: `Bearer ${token}`},
                 }
-            })
+            );
+            const user = await response.json();
+            //store user information  in Asyncstorage
+            console.log('User: ', user);
+            await AsyncStorage.setItem("user", JSON.stringify(user));
+            setUserInfo(user);
         } catch (error) {
-            console.log('ERROR: ', error)
+            console.error(
+                "Failed to fetch user data:",
+                response.status,
+                response.statusText
+            );
         }
-    }
+    };
 
-    const getResponse = async () => {
-        if (response) {
-            if (response?.type === 'error') {
-                ToastAndroid.show('Erro ao obter informações do usuário na autenticação pelo Google', ToastAndroid.SHORT);
-            } else if (response?.type === 'cancel') {
-                ToastAndroid.show('Login pelo google cancelado', ToastAndroid.SHORT);
-            } else if (response?.type === 'success') {
-                await getUserInfo(response);
+    const signInWithGoogle = async () => {
+        try {
+            // Attempt to retrieve user information from AsyncStorage
+            const userJSON = await AsyncStorage.getItem("user");
+
+            if (userJSON) {
+                // If user information is found in AsyncStorage, parse it and set it in the state
+                setUserInfo(JSON.parse(userJSON));
+            } else if (response?.type === "success") {
+                // If no user information is found and the response type is "success" (assuming response is defined),
+                // call getUserInfo with the access token from the response
+                getUserInfo(response.authentication.accessToken);
             }
+        } catch (error) {
+            // Handle any errors that occur during AsyncStorage retrieval or other operations
+            console.error("Error retrieving user data from AsyncStorage:", error);
         }
-    }
+    };
 
+    //add it to a useEffect with response as a dependency
     useEffect(() => {
-        getResponse().then();
+        signInWithGoogle();
     }, [response]);
-     */
-    // FIM LOGIN OAUTH angolano
 
-
-    // login gpt
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        expoClientId: 'YOUR_EXPO_CLIENT_ID',
-        iosClientId: 'YOUR_IOS_CLIENT_ID',
-        androidClientId: 'YOUR_ANDROID_CLIENT_ID',
-        webClientId: 'YOUR_WEB_CLIENT_ID',
-        redirectUri,
-    });
-
-    useEffect(() => {
-        if (response?.type === 'success') {
-            const {authentication} = response;
-            // Use o token de autenticação para se comunicar com a API do Google
-            console.log(authentication);
-        }
-    }, [response]);
-    // fim login gpt
-
+    //log the userInfo to see user details
+    console.log(JSON.stringify(userInfo))
 
     const [databaseStarted, setDatabaseStarted] = useState(false);
     const [events, setEvents] = useState([]);
@@ -161,7 +149,9 @@ const Home = () => {
     return (
         <ScrollView contentContainerStyle={{display: 'flex', alignItems: 'center'}}>
             <AddButton onPress={() => navigation.navigate('AddEvent')}/>
-            <Button title={'Logar'} onPress={promptAsync}/>
+            <Button title="sign in with google" onPress={() => {
+                promptAsync()
+            }}/>
             {events?.map((event) => {
                 return (
                     <TouchableOpacity
