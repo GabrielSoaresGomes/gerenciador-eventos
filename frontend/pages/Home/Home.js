@@ -133,6 +133,7 @@ const Home = () => {
                         date={event.date}
                         timeStart={event.time_start}
                         timeEnd={event.time_end}
+                        imageSrc={event.image}
                     />
                 </TouchableOpacity>
             ))}

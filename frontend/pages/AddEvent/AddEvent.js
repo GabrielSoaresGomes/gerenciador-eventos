@@ -168,6 +168,7 @@ const AddEvent = () => {
             }
 
             const connection = await NetInfo.fetch();
+            console.info('Iniciando inserção do evento!');
             if (connection.isConnected && connection.isInternetReachable) {
                 newEvent.event_uuid = randomUUID();
                 await addDocumentFirebase(newEvent);

@@ -7,7 +7,7 @@ const CameraInput = ({setCameraVisible, imgUri}) => {
         <View>
             <Text style={style.textDiv} onPress={() => setCameraVisible(true)}>{imgUri? "Alterar Imagem": "Adicionar Imagem +"}</Text>
             { imgUri &&
-                <Image style={style.imgPreview} src={imgUri}></Image>
+                <Image style={style.imgPreview} source={{uri: `data:image/png;base64,${imgUri}`}}></Image>
             }
         </View>
     )

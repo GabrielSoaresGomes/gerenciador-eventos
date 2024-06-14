@@ -53,7 +53,6 @@ const Login = () => {
                 password
             }
             const resultLogin = await selectUserByEmailAndPassword(userData);
-            console.log(resultLogin);
             if (resultLogin?.length) {
                 navigation.navigate('Home');
             }else {

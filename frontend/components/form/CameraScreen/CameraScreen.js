@@ -7,9 +7,9 @@ const CameraScreen = ({cameraRef, setCameraVisible, setImgUri}) => {
     const takePicture = async () => {
         if (cameraRef.current) {
             try {
-                const photo = await cameraRef.current.takePictureAsync();
+                const photo = await cameraRef.current.takePictureAsync({base64: true, quality: 0.2});
                 setCameraVisible(false);
-                setImgUri(photo.uri);
+                setImgUri(photo.base64);
             } catch (error) {
                 console.error('Erro ao capturar a foto:', error);
             }

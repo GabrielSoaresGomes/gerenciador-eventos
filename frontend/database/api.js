@@ -5,13 +5,13 @@ import {dbFirebase} from '../firebase-config';
 import {randomUUID} from "expo-crypto";
 
 const initDB = async () => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
     await recreateTables();
     console.info('Tabelas criadas com sucesso!!');
 };
 
 const getAllEvents = async () => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
     const result = await db?.getAllAsync(`
             SELECT *
             FROM events
@@ -20,7 +20,7 @@ const getAllEvents = async () => {
 }
 
 const recreateTables = async () => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
+    const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
     await db.execAsync(`
         DROP TABLE IF EXISTS events;
         CREATE TABLE IF NOT EXISTS events (
@@ -34,7 +34,7 @@ const recreateTables = async () => {
             location_long TEXT NOT NULL,
             address TEXT NOT NULL,
             description TEXT NOT NULL,
-            image BYTEA
+            image TEXT
         );
         DROP TABLE IF EXISTS events_to_add;
         CREATE TABLE IF NOT EXISTS events_to_add (
@@ -47,7 +47,7 @@ const recreateTables = async () => {
             location_long TEXT NOT NULL,
             address TEXT NOT NULL,
             description TEXT NOT NULL,
-            image BYTEA
+            image TEXT
         );
         DROP TABLE IF EXISTS events_to_delete;
         CREATE TABLE IF NOT EXISTS events_to_delete (
@@ -79,7 +79,7 @@ const recreateTables = async () => {
 
 const getAllEventsToAdd = async () => {
     try {
-        const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
         const result = await db?.getAllAsync(`
             SELECT *
             FROM events_to_add
@@ -93,7 +93,7 @@ const getAllEventsToAdd = async () => {
 
 const getAllEventsToDelete = async () => {
     try {
-        const db = await SQLite.openDatabaseAsync("manager_events.db");
+            const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
             const result = await db?.getAllAsync(`
             SELECT *
             FROM events_to_delete
@@ -106,7 +106,7 @@ const getAllEventsToDelete = async () => {
 }
 
 // const getEventById = async (eventId) => {
-//     const db = await SQLite.openDatabaseAsync("manager_events.db");
+//         const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
 //     const result = await db.getFirstAsync(`
 //             SELECT *
 //             FROM events
@@ -116,7 +116,7 @@ const getAllEventsToDelete = async () => {
 // }
 
 const deleteEventToAddById = async (eventId) => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
     const result = await db.runAsync(`
         DELETE FROM events_to_add
         WHERE id = ?
@@ -126,7 +126,7 @@ const deleteEventToAddById = async (eventId) => {
 }
 
 const deleteEventToDeleteById = async (eventId) => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
     const result = await db.runAsync(`
         DELETE FROM events_to_delete
         WHERE id = ?
@@ -150,7 +150,7 @@ const removeDocumentFirebase = async (eventId) => {
 
 const insertEvent = async (eventBody) => {
     try {
-        const db = await SQLite.openDatabaseAsync("manager_events.db");
+            const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
         const result = await db.runAsync(`
         INSERT INTO events (event_uuid, title, date, time_start, time_end, address, location_lat, location_long, description, image)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -164,7 +164,7 @@ const insertEvent = async (eventBody) => {
 
 const insertToQueueAdd = async (eventBody) => {
     try {
-        const db = await SQLite.openDatabaseAsync("manager_events.db");
+            const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
         const result = await db.runAsync(`
             INSERT INTO events_to_add (title, date, time_start, time_end, address, location_lat, location_long, description, image)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -178,7 +178,7 @@ const insertToQueueAdd = async (eventBody) => {
 
 const insertUserToQueueAdd = async (userBody) => {
     try {
-        const db = await SQLite.openDatabaseAsync("manager_events.db");
+            const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
         const result = await db.runAsync(`
             INSERT INTO user_to_add (email, password, user_uuid)
             VALUES (?, ?, ?)
@@ -190,7 +190,7 @@ const insertUserToQueueAdd = async (userBody) => {
 
 const insertToQueueDelete = async (eventBody) => {
     try {
-        const db = await SQLite.openDatabaseAsync("manager_events.db");
+            const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
         const result = await db.runAsync(`
         INSERT INTO events_to_delete (event_uuid)
         VALUES (?)
@@ -223,7 +223,7 @@ const addDocumentFirebase = async (event) => {
 }
 
 // const updateEvent = async (eventId, eventBody) => {
-//     const db = await SQLite.openDatabaseAsync("manager_events.db");
+//         const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
 //     const result = await db.runAsync(`
 //         UPDATE events
 //         SET title = ?, date = ?, time_start = ?, time_end = ?, address = ?, location_lat = ?, location_long = ?, description = ?, image = ?
@@ -264,6 +264,7 @@ const insertUserOnRemote = async (userBody) => {
 
 const insertUserOnLocal = async (userBody) => {
     try {
+        console.log(userBody);
         const db = await SQLite.openDatabaseAsync('manager_events.db');
         await db.runAsync(`
             INSERT INTO user (email, password, user_uuid)
@@ -275,7 +276,7 @@ const insertUserOnLocal = async (userBody) => {
 }
 
 const selectUserByEmailAndPassword = async (userData) => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
     const result = await db.getAllAsync(`
         SELECT * 
         FROM user
@@ -286,7 +287,7 @@ const selectUserByEmailAndPassword = async (userData) => {
 }
 
 const getAllUsersToCreateOnRemote = async () => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
     const result = await db.getAllAsync(`
         SELECT *
         FROM user_to_add
@@ -295,7 +296,7 @@ const getAllUsersToCreateOnRemote = async () => {
 }
 
 const deleteUserToCreateOnRemoteById = async (id) => {
-    const db = await SQLite.openDatabaseAsync("manager_events.db");
+        const db = await SQLite.openDatabaseAsync("manager_events.db", {useNewConnection: true});
     await db.runAsync(`
         DELETE FROM user_to_add
         WHERE id = ?
